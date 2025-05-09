@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SOON.</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      color: white;
+      height: 100%;
+      font-family: monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    #joinContent {
+      width: 100%;
+      max-width: 600px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 1.5rem;
+      margin-top: 10px;
+    }
+
+    #logo {
+      font-size: 6rem;
+      margin-top: 40px;
+      cursor: normal; /* Keeps the normal pointer (arrow) cursor */
+      user-select: none; /* Prevents text selection */
+    }
+
+    /* Hide the cursor when hovering over the logo */
+    #logo:hover {
+      cursor: normal; /* No change in cursor */
+    }
+  </style>
+</head>
+<body>
+  <div id="joinContent">
+    <!-- Display the ★★★꩜ characters as the logo, which is clickable -->
+    <div id="logo" onclick="window.location.href='morsecode.html';">
+      ★★★꩜
+    </div>
+
+    <h1>BE NOT AFRAID</h1>
+    <p>YOU WILL BE ABLE TO APPLY SOON.</p>
+  </div>
+</body>
+</html>

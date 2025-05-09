@@ -1,26 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centered Text</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
-        }
-        h1 {
-            font-size: 2rem;
-            color: black;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>3STARSWIRL</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      height: 100%;
+      overflow: hidden;
+      font-family: monospace;
+      position: relative;
+    }
+
+    #infinity {
+      position: absolute;
+      font-size: 6rem;
+      color: white;
+      text-align: center;
+      width: 100%;
+      transform: translate(-50%, -50%);
+      left: 50%;
+      top: 50%;
+      z-index: 1;
+    }
+
+    #subtext {
+      position: absolute;
+      bottom: 100px;
+      width: 100%;
+      text-align: center;
+      color: white;
+      font-size: 1.5rem;
+      letter-spacing: 2px;
+      z-index: 1;
+    }
+
+    #joinButton {
+      position: absolute;
+      bottom: 40px;
+      width: 100%;
+      text-align: center;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      z-index: 1;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    #joinButton:hover {
+      color: #747474;
+    }
+
+    @keyframes shake {
+      0% { transform: translate(0px, 0px) rotate(0deg); }
+      25% { transform: translate(4px, -2px) rotate(1deg); }
+      50% { transform: translate(-4px, 3px) rotate(-1deg); }
+      75% { transform: translate(2px, -3px) rotate(1deg); }
+      100% { transform: translate(0px, 0px) rotate(0deg); }
+    }
+
+  </style>
 </head>
 <body>
-    <h1>test</h1>
+  <div id="infinity">★★★꩜</div>
+  <div id="subtext">3STARSWIRL, INC.</div>
+  <div id="joinButton" onclick="window.location.href='join.html';">JOIN NOW</div>
+
+  <script>
+    const infinity = document.getElementById("infinity");
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const radius = 100;
+    let angle = 0;
+
+    function animateInfinity() {
+      const x = radius * Math.sin(angle);
+      const y = radius * Math.sin(angle) * Math.cos(angle);
+      infinity.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+      angle += 0.02;
+      requestAnimationFrame(animateInfinity);
+    }
+
+    animateInfinity();
+  </script>
 </body>
 </html>
