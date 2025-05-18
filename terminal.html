@@ -176,34 +176,14 @@
           } else {
             clearInterval(typer);
             setTimeout(() => {
-              terminal.innerHTML = '';
-              showMenu();
-            }, 400);
+              window.location.href = 'os.html';
+          }, 400);
           }
         }, 100);
       }, 600);
     };
 
-    const showMenu = () => {
-      const options = [
-        "boot successful.",
-        "what would you like to do?",
-        "1. login",
-        "2. signup",
-        "3. open logs (requires login info)",
-        "4. exit"
-      ];
-
-      options.forEach((line, i) => {
-        setTimeout(() => {
-          const item = document.createElement('div');
-          item.textContent = line;
-          terminal.appendChild(item);
-          terminal.scrollTop = terminal.scrollHeight;
-        }, i * 400);
-      });
-    };
-
+  
     boot();
   </script>
 </body>
