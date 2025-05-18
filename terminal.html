@@ -172,8 +172,9 @@
         const typer = setInterval(() => {
           if (i < cmd.length) {
             typing.textContent += cmd[i++];
-            terminal.scrollTop = terminal.scrollHeight;
-          } else {
+            terminal.scrollTop = terminal.scrollHeight
+          } 
+          else {
             clearInterval(typer);
             setTimeout(() => {
               window.location.href = 'os.html';
