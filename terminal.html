@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Terminal Boot</title>
+  <style>
+    body {
+      background: black;
+      color: #00FF00;
+      font-family: monospace;
+      padding: 20px;
+      white-space: pre-wrap;
+    }
+    #output {
+      margin-bottom: 10px;
+    }
+    #inputArea {
+      display: inline;
+    }
+    input {
+      background: transparent;
+      border: none;
+      color: #00FF00;
+      font-family: monospace;
+      outline: none;
+      width: 2ch;
+    }
+  </style>
+</head>
+<body>
+  <div id="output">last bootup failed. boot into terminal? [Y/N]</div>
+  <div id="inputArea">
+    <input id="userInput" maxlength="1" autofocus />
+  </div>
+
+  <script>
+    const input = document.getElementById("userInput");
+    const output = document.getElementById("output");
+
+    input.addEventListener("keyup", function(e) {
+      const val = input.value.toUpperCase();
+      if (val === "Y") {
+        output.innerText += "\nbooting into terminal...\n";
+        simulateBoot();
+      } else if (val === "N") {
+        output.innerText += "\nexiting...";
+        setTimeout(() => {
+          window.location.href = "join.html";
+        }, 1500);
+      }
+    });
+
+    function simulateBoot() {
+      const lines = [
+        "initializing kernel...",
+        "checking filesystems...",
+        "mounting /dev/sda1...",
+        "starting daemons...",
+        "loading environment variables...",
+        "3STARSWIRL secure shell initialized.",
+        "accessing memory banks...",
+        "boot sequence complete.",
+        "> _"
+      ];
+      let index = 0;
+      const interval = setInterval(() => {
+        if (index < lines.length) {
+          output.innerText += "\n" + lines[index++];
+        } else {
+          clearInterval(interval);
+        }
+      }, 300);
+    }
+  </script>
+</body>
+</html>
