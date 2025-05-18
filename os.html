@@ -49,48 +49,60 @@
     const terminal = document.getElementById('terminal');
     let currentInput = "";
 
-    const writeLine = (text) => {
+    const writeLine = (text, options = {}) => {
       const div = document.createElement('div');
       div.textContent = text;
+      if (options.size) div.style.fontSize = options.size;
+      if (options.color) div.style.color = options.color;
       terminal.appendChild(div);
       terminal.scrollTop = terminal.scrollHeight;
     };
 
-    writeLine("boot successful.");
-    writeLine("what would you like to do?");
-    writeLine("1. logs");
-    writeLine("2. exit");
+    const getRandomSize = () => {
+      const sizes = ['12px', '14px', '16px', '18px', '20px', '24px', '32px'];
+      return sizes[Math.floor(Math.random() * sizes.length)];
+    };
 
-    const handleJames = () => {
+    const randomizeCase = (text) => {
+      return text.split('').map(char =>
+        Math.random() > 0.5 ? char.toUpperCase() : char.toLowerCase()
+      ).join('');
+    };
+
+    const generateGlitchText = (base) => {
+      const length = Math.floor(Math.random() * 10) + 3;
+      return randomizeCase(base.repeat(length));
+    };
+
+    const glitchLoop = () => {
       let count = 0;
-      const msgLoop = setInterval(() => {
-        if (count < 5) {
-          writeLine("THEY TOOK ME");
-        } else {
-          writeLine("HAHA");
-        }
+      const loop = setInterval(() => {
+        const text = count < 5 ? "THEY TOOK ME" : "HAHA";
+        const glitchText = generateGlitchText(text);
+        writeLine(glitchText, { size: getRandomSize() });
         count++;
       }, 100);
 
       setTimeout(() => {
-        clearInterval(msgLoop);
+        clearInterval(loop);
         setTimeout(() => {
-          terminal.innerHTML = "";
+          terminal.innerHTML = '';
           writeLine("its their fault.");
-          document.body.style.backgroundColor = "white";
-          document.body.style.color = "black";
-
           setTimeout(() => {
-            window.close(); // Might not work in all browsers
-          }, 2000);
+            terminal.innerHTML = '';
+            document.body.style.backgroundColor = "white";
+            document.body.style.color = "black";
+            setTimeout(() => {
+              window.close();
+            }, 2000);
+          }, 3000);
         }, 5000);
-      }, 30000); // stop after 30 seconds
+      }, 30000);
     };
 
     const inputHandler = (e) => {
       const key = e.key;
 
-      // Handle visible commands
       if (key === '1') {
         writeLine("> logs");
         writeLine("logs functionality not yet implemented.");
@@ -108,11 +120,10 @@
         link.href = URL.createObjectURL(blob);
         link.download = 'no.txt';
         link.click();
-
         localStorage.setItem('hasDownloadedNo', 'true');
 
         setTimeout(() => {
-          window.close();
+          window.close(); // Browser may block this
         }, 1000);
       } else if (key.length === 1 && /^[a-zA-Z0-9]$/.test(key)) {
         currentInput += key;
@@ -121,7 +132,7 @@
         writeLine("> " + input);
         if (input === 'james') {
           if (localStorage.getItem('hasDownloadedNo') === 'true') {
-            handleJames();
+            glitchLoop();
           } else {
             writeLine("unauthorized.");
           }
@@ -131,6 +142,11 @@
         currentInput = "";
       }
     };
+
+    writeLine("boot successful.");
+    writeLine("what would you like to do?");
+    writeLine("1. logs");
+    writeLine("2. exit");
 
     document.addEventListener('keydown', inputHandler);
   </script>
