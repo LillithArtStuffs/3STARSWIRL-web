@@ -16,6 +16,21 @@
       align-items: center;
       text-align: center;
     }
+#terminalLink {
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.2);
+  animation: blink 1s infinite;
+  cursor: pointer;
+  user-select: none;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.6; }
+}
 
     #joinContent {
       width: 100%;
