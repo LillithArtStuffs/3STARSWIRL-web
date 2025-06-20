@@ -1,110 +1,316 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>ACCESS LOGS</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: black;
-      color: #00ff00;
-      font-family: monospace;
-      overflow-y: auto;
-    }
-
-    .scanlines::before {
-      content: "";
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100%;
-      width: 100%;
-      background: repeating-linear-gradient(
-        to bottom,
-        rgba(0, 0, 0, 0) 0px,
-        rgba(0, 0, 0, 0) 2px,
-        rgba(0, 0, 0, 0.15) 2px,
-        rgba(0, 0, 0, 0.15) 4px
-      );
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .terminal {
-      padding: 20px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .log-entry {
-      margin-bottom: 16px;
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-
-    .log-entry:hover {
-      color: #00dd00;
-    }
-
-    .redacted {
-      background: #00ff00;
-      color: black;
-      padding: 0 4px;
-      margin: 0 2px;
-    }
-
-    .back-link {
-      color: #00ff00;
-      text-decoration: underline;
-      display: block;
-      margin: 20px 0;
-      cursor: pointer;
-    }
-
-  </style>
+<meta charset="UTF-8" />
+<title>3STARSWIRL Logs</title>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    background: black;
+    color: #00ff00;
+    font-family: monospace;
+    height: 100%;
+    overflow: hidden;
+  }
+  .terminal {
+    padding: 10px;
+    white-space: pre-wrap;
+    overflow-y: auto;
+    height: 100vh;
+    box-sizing: border-box;
+    text-shadow: 0 0 4px #00ff00;
+    position: relative;
+  }
+  .scanlines::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    height: 100%; width: 100%;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(0,0,0,0) 0px,
+      rgba(0,0,0,0) 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+  }
+  .redacted {
+    color: #004400;
+    background-color: #00ff00;
+    user-select: none;
+    padding: 0 3px;
+    border-radius: 2px;
+  }
+  .clickable {
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .input-prompt {
+    display: inline;
+  }
+</style>
 </head>
 <body>
   <div class="scanlines"></div>
-  <div class="terminal">
-    <div class="back-link" onclick="window.location.href='os.html'">← return to terminal</div>
+  <div class="terminal" id="terminal"></div>
 
-    <div class="log-entry">
-      > LOG 0489 — ACCESS GRANTED TO EMPLOYEE <span class="redacted">███ ███████</span><br>
-      > Timestamp: 2034-08-14 03:21:17
-    </div>
+<script>
+  const terminal = document.getElementById('terminal');
 
-    <div class="log-entry">
-      > LOG 0490 — INTERNAL FILE ACCESSED: <span class="redacted">[REDACTED]</span><br>
-      > Timestamp: 2034-08-14 03:25:02
-    </div>
+  // Employees with detail info
+  const employeesData = [
+    {
+      id: "CL349",
+      name: "Luke Castillo",
+      status: "Terminated",
+      details: [
+        "Employee ID: CL349",
+        "Name: Luke Castillo",
+        "Position: Operations Specialist",
+        "Status: Terminated",
+        "Last Login: 2034-08-20 18:33",
+        "Notes: Left under mysterious circumstances."
+      ]
+    },
+    {
+      id: "JN027",
+      name: "James Nguyen",
+      status: "Active",
+      details: [
+        "Employee ID: JN027",
+        "Name: James Nguyen",
+        "Position: Security Analyst",
+        "Status: Active",
+        "Last Login: 2025-06-19 07:12",
+        "Notes: On probation."
+      ]
+    },
+    {
+      id: "AK133",
+      name: "Anna Kline",
+      status: "Active",
+      details: [
+        "Employee ID: AK133",
+        "Name: Anna Kline",
+        "Position: Software Engineer",
+        "Status: Active",
+        "Last Login: 2025-06-20 12:05",
+        "Notes: Leading sensor project."
+      ]
+    },
+    {
+      id: "REDACTED",
+      name: "████████",
+      status: "███████",
+      details: [
+        "Employee ID: ████████",
+        "Name: ████████",
+        "Position: ████████",
+        "Status: ███████",
+        "Last Login: ████████",
+        "Notes: ████████████████"
+      ]
+    }
+  ];
 
-    <div class="log-entry">
-      > LOG 0491 — UNAUTHORIZED USB DEVICE DETECTED<br>
-      > USER: <span class="redacted">CL349</span><br>
-      > Status: Escalated to Security
-    </div>
+  // Security logs - static
+  const securityLogs = [
+    "[2025-06-18 14:35] Unauthorized access attempt detected - ID REDACTED",
+    "[2025-06-19 08:21] Firewall rules updated successfully.",
+    "[2025-06-19 21:13] Suspicious activity from IP 192.168.1.54",
+    "[2025-06-20 03:40] Security camera #4 offline - investigating."
+  ];
 
-    <div class="log-entry">
-      > LOG 0492 — <span class="redacted">ERROR_LOG_CORRUPTED</span><br>
-      > Timestamp: <span class="redacted">██:██:██</span>
-    </div>
+  // Sensors - dynamic values updated every 5 seconds
+  let sensorsData = {
+    temperature: 22.5,
+    humidity: 43,
+    pressure: 1013,
+    motion: false,  // false = no activity, true = activity detected
+    power: 1.2
+  };
 
-    <div class="log-entry">
-      > LOG 0493 — SYSTEM REBOOT INITIATED<br>
-      > Reason: Scheduled maintenance
-    </div>
+  // Helper to generate sensor display lines
+  function getSensorLines() {
+    return [
+      `SENSOR DATA:`,
+      `Temperature Sensor #12: ${sensorsData.temperature.toFixed(1)}°C`,
+      `Humidity Sensor #7: ${sensorsData.humidity}%`,
+      `Pressure Sensor #5: ${sensorsData.pressure} hPa`,
+      `Motion Sensor #3: ${sensorsData.motion ? "Activity detected" : "No activity detected."}`,
+      `Power Consumption: ${sensorsData.power.toFixed(1)} kW`,
+      "Press [B] to go back."
+    ];
+  }
 
-    <div class="log-entry">
-      > LOG 0494 — EMPLOYEE <span class="redacted">████ █████</span> REMOVED FROM ACCESS LIST<br>
-      > Timestamp: 2034-08-14 04:12:03
-    </div>
+  // Simulate sensors updating with random changes
+  function updateSensors() {
+    sensorsData.temperature += (Math.random() - 0.5) * 0.5; // small fluctuation
+    sensorsData.humidity += (Math.random() - 0.5) * 1;
+    sensorsData.pressure += (Math.random() - 0.5) * 2;
+    sensorsData.power += (Math.random() - 0.5) * 0.1;
+    if(Math.random() < 0.3) {
+      sensorsData.motion = !sensorsData.motion; // toggle motion sometimes
+    }
+    // Clamp values
+    sensorsData.temperature = Math.min(Math.max(sensorsData.temperature, 20), 25);
+    sensorsData.humidity = Math.min(Math.max(sensorsData.humidity, 40), 50);
+    sensorsData.pressure = Math.min(Math.max(sensorsData.pressure, 1000), 1025);
+    sensorsData.power = Math.min(Math.max(sensorsData.power, 1.0), 1.5);
+  }
 
-    <div class="log-entry">
-      > LOG 0495 — MESSAGE RECEIVED: "we should have never agreed to this."<br>
-      > Flagged for review by Ethics
-    </div>
+  // Terminal typing effect - types lines one at a time with delay
+  function typeLines(lines, onComplete) {
+    let idx = 0;
+    terminal.innerHTML = '';
+    function nextLine() {
+      if(idx < lines.length) {
+        const div = document.createElement('div');
+        div.textContent = lines[idx++];
+        terminal.appendChild(div);
+        terminal.scrollTop = terminal.scrollHeight;
+        setTimeout(nextLine, 300);
+      } else {
+        if(onComplete) onComplete();
+      }
+    }
+    nextLine();
+  }
 
-  </div>
+  // Type detailed employee info line by line, then wait for [B] back input
+  function showEmployeeDetails(employee) {
+    typeLines(employee.details, () => {
+      writeLine("Press [B] to go back.");
+      waitForBack(() => showEmployeesMenu());
+    });
+  }
+
+  // Write a line instantly (no typing)
+  function writeLine(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    terminal.appendChild(div);
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  // Show employee list, clickable entries, typed line by line
+  function showEmployeesMenu() {
+    const lines = [
+      "EMPLOYEE LOGS:",
+      ...employeesData.map(e => `${e.id}  Name: ${e.name}  Status: ${e.status}`),
+      "Click employee ID to see details, or press [B] to go back."
+    ];
+    typeLines(lines, () => {
+      // Make employee IDs clickable
+      employeesData.forEach(emp => {
+        // Find the div with employee line
+        const items = Array.from(terminal.children);
+        const lineDiv = items.find(d => d.textContent.includes(emp.id));
+        if(lineDiv) {
+          lineDiv.classList.add('clickable');
+          lineDiv.style.userSelect = "text";
+          lineDiv.onclick = () => showEmployeeDetails(emp);
+        }
+      });
+      waitForBack(() => {
+        currentMenu = 'main';
+        showMainMenu();
+      });
+    });
+  }
+
+  // Show security logs
+  function showSecurityLogs() {
+    typeLines(["SECURITY LOGS:", ...securityLogs, "Press [B] to go back."], () => {
+      waitForBack(() => {
+        currentMenu = 'main';
+        showMainMenu();
+      });
+    });
+  }
+
+  // Show sensors menu with dynamic updates
+  let sensorInterval = null;
+  function showSensorsMenu() {
+    function displaySensors() {
+      typeLines(getSensorLines(), () => {
+        waitForBack(() => {
+          clearInterval(sensorInterval);
+          currentMenu = 'main';
+          showMainMenu();
+        });
+      });
+    }
+
+    displaySensors();
+    sensorInterval = setInterval(() => {
+      updateSensors();
+      // Only update display if still in sensors menu
+      if(currentMenu === 'sensors') {
+        terminal.innerHTML = '';
+        typeLines(getSensorLines());
+      } else {
+        clearInterval(sensorInterval);
+      }
+    }, 5000);
+  }
+
+  // Show main menu
+  function showMainMenu() {
+    typeLines([
+      "3STARSWIRL LOGS SYSTEM",
+      "Select an option:",
+      "1. Employee Logs",
+      "2. Security Logs",
+      "3. Sensor Data",
+      "4. Back",
+    ], () => {
+      waitForInput();
+    });
+  }
+
+  // Wait for keyboard input for menu selection
+  function waitForInput() {
+    const listener = (e) => {
+      const key = e.key.toLowerCase();
+      if(currentMenu === 'main') {
+        if(key === '1') {
+          currentMenu = 'employees';
+          showEmployeesMenu();
+        } else if(key === '2') {
+          currentMenu = 'security';
+          showSecurityLogs();
+        } else if(key === '3') {
+          currentMenu = 'sensors';
+          showSensorsMenu();
+        } else if(key === '4') {
+          window.location.href = 'os.html'; // Go back
+        }
+      }
+      e.preventDefault();
+      document.removeEventListener('keydown', listener);
+    };
+    document.addEventListener('keydown', listener);
+  }
+
+  // Wait for [B] key to go back in submenus
+  function waitForBack(callback) {
+    const backListener = (e) => {
+      if(e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        document.removeEventListener('keydown', backListener);
+        callback();
+      }
+    };
+    document.addEventListener('keydown', backListener);
+  }
+
+  // Start on main menu
+  let currentMenu = 'main';
+  showMainMenu();
+
+</script>
 </body>
 </html>
