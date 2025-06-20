@@ -223,6 +223,7 @@
 
   // Show security logs
   function showSecurityLogs() {
+  terminal.innerHTML = '';
     typeLines(["SECURITY LOGS:", ...securityLogs, "Press [B] to go back."], () => {
       waitForBack(() => {
         currentMenu = 'main';
@@ -259,6 +260,7 @@
 
   // Show main menu
   function showMainMenu() {
+  terminal.innerHTML = '';
     typeLines([
       "3STARSWIRL LOGS SYSTEM",
       "Select an option:",
