@@ -12,6 +12,7 @@
       overflow: hidden;
       font-family: monospace;
       position: relative;
+      color: white;
     }
 
     #infinity {
@@ -37,21 +38,28 @@
       z-index: 1;
     }
 
-    #joinButton {
+    .navButton {
       position: absolute;
-      bottom: 40px;
       width: 100%;
       text-align: center;
-      color: white;
       font-size: 2rem;
       font-weight: bold;
       z-index: 1;
       cursor: pointer;
       text-decoration: underline;
+      color: white;
     }
 
-    #joinButton:hover {
+    .navButton:hover {
       color: #747474;
+    }
+
+    #joinButton {
+      bottom: 60px;
+    }
+
+    #aboutLink {
+      bottom: 20px;
     }
 
     @keyframes shake {
@@ -61,18 +69,17 @@
       75% { transform: translate(2px, -3px) rotate(1deg); }
       100% { transform: translate(0px, 0px) rotate(0deg); }
     }
-
   </style>
 </head>
 <body>
   <div id="infinity">★★★꩜</div>
   <div id="subtext">3STARSWIRL, INC.</div>
-  <div id="joinButton" onclick="window.location.href='join.html';">JOIN NOW</div>
+
+  <div id="joinButton" class="navButton" onclick="window.location.href='join.html';">JOIN NOW</div>
+  <div id="aboutLink" class="navButton" onclick="window.location.href='about.html';">ABOUT</div>
 
   <script>
     const infinity = document.getElementById("infinity");
-    const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight / 2;
     const radius = 100;
     let angle = 0;
 
