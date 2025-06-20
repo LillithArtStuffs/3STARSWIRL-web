@@ -132,7 +132,6 @@
     power: 1.2
   };
 
-  // Helper to generate sensor display lines
   function getSensorLines() {
     return [
       `SENSOR DATA:`,
@@ -145,41 +144,39 @@
     ];
   }
 
-  // Simulate sensors updating with random changes
   function updateSensors() {
-    sensorsData.temperature += (Math.random() - 0.5) * 0.5; // small fluctuation
+    sensorsData.temperature += (Math.random() - 0.5) * 0.5;
     sensorsData.humidity += (Math.random() - 0.5) * 1;
     sensorsData.pressure += (Math.random() - 0.5) * 2;
     sensorsData.power += (Math.random() - 0.5) * 0.1;
     if(Math.random() < 0.3) {
-      sensorsData.motion = !sensorsData.motion; // toggle motion sometimes
+      sensorsData.motion = !sensorsData.motion;
     }
-    // Clamp values
     sensorsData.temperature = Math.min(Math.max(sensorsData.temperature, 20), 25);
     sensorsData.humidity = Math.min(Math.max(sensorsData.humidity, 40), 50);
     sensorsData.pressure = Math.min(Math.max(sensorsData.pressure, 1000), 1025);
     sensorsData.power = Math.min(Math.max(sensorsData.power, 1.0), 1.5);
   }
 
-  // Terminal typing effect - types lines one at a time with delay
+  // Type lines one by one, clearing terminal immediately before typing
   function typeLines(lines, onComplete) {
     let idx = 0;
-    terminal.innerHTML = '';
+    terminal.innerHTML = ''; // Clear immediately
+
     function nextLine() {
-      if(idx < lines.length) {
+      if (idx < lines.length) {
         const div = document.createElement('div');
         div.textContent = lines[idx++];
         terminal.appendChild(div);
         terminal.scrollTop = terminal.scrollHeight;
         setTimeout(nextLine, 300);
       } else {
-        if(onComplete) onComplete();
+        if (onComplete) onComplete();
       }
     }
     nextLine();
   }
 
-  // Type detailed employee info line by line, then wait for [B] back input
   function showEmployeeDetails(employee) {
     typeLines(employee.details, () => {
       writeLine("Press [B] to go back.");
@@ -187,7 +184,6 @@
     });
   }
 
-  // Write a line instantly (no typing)
   function writeLine(text) {
     const div = document.createElement('div');
     div.textContent = text;
@@ -195,7 +191,6 @@
     terminal.scrollTop = terminal.scrollHeight;
   }
 
-  // Show employee list, clickable entries, typed line by line
   function showEmployeesMenu() {
     const lines = [
       "EMPLOYEE LOGS:",
@@ -205,7 +200,6 @@
     typeLines(lines, () => {
       // Make employee IDs clickable
       employeesData.forEach(emp => {
-        // Find the div with employee line
         const items = Array.from(terminal.children);
         const lineDiv = items.find(d => d.textContent.includes(emp.id));
         if(lineDiv) {
@@ -221,9 +215,8 @@
     });
   }
 
-  // Show security logs
   function showSecurityLogs() {
-  terminal.innerHTML = '';
+    terminal.innerHTML = '';
     typeLines(["SECURITY LOGS:", ...securityLogs, "Press [B] to go back."], () => {
       waitForBack(() => {
         currentMenu = 'main';
@@ -232,7 +225,6 @@
     });
   }
 
-  // Show sensors menu with dynamic updates
   let sensorInterval = null;
   function showSensorsMenu() {
     function displaySensors() {
@@ -248,7 +240,6 @@
     displaySensors();
     sensorInterval = setInterval(() => {
       updateSensors();
-      // Only update display if still in sensors menu
       if(currentMenu === 'sensors') {
         terminal.innerHTML = '';
         typeLines(getSensorLines());
@@ -258,9 +249,8 @@
     }, 5000);
   }
 
-  // Show main menu
   function showMainMenu() {
-  terminal.innerHTML = '';
+    terminal.innerHTML = '';
     typeLines([
       "3STARSWIRL LOGS SYSTEM",
       "Select an option:",
@@ -273,9 +263,11 @@
     });
   }
 
-  // Wait for keyboard input for menu selection
+  // Use named listeners to remove properly and avoid stacking
   function waitForInput() {
-    const listener = (e) => {
+    document.removeEventListener('keydown', waitForInput.listener);
+
+    waitForInput.listener = (e) => {
       const key = e.key.toLowerCase();
       if(currentMenu === 'main') {
         if(key === '1') {
@@ -292,24 +284,26 @@
         }
       }
       e.preventDefault();
-      document.removeEventListener('keydown', listener);
+      document.removeEventListener('keydown', waitForInput.listener);
     };
-    document.addEventListener('keydown', listener);
+
+    document.addEventListener('keydown', waitForInput.listener);
   }
 
-  // Wait for [B] key to go back in submenus
   function waitForBack(callback) {
-    const backListener = (e) => {
+    document.removeEventListener('keydown', waitForBack.listener);
+
+    waitForBack.listener = (e) => {
       if(e.key.toLowerCase() === 'b') {
         e.preventDefault();
-        document.removeEventListener('keydown', backListener);
+        document.removeEventListener('keydown', waitForBack.listener);
         callback();
       }
     };
-    document.addEventListener('keydown', backListener);
+
+    document.addEventListener('keydown', waitForBack.listener);
   }
 
-  // Start on main menu
   let currentMenu = 'main';
   showMainMenu();
 
