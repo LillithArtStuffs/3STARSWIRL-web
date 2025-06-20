@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ACCESS LOGS</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      color: #00ff00;
+      font-family: monospace;
+      overflow-y: auto;
+    }
+
+    .scanlines::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0px,
+        rgba(0, 0, 0, 0) 2px,
+        rgba(0, 0, 0, 0.15) 2px,
+        rgba(0, 0, 0, 0.15) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .terminal {
+      padding: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .log-entry {
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .log-entry:hover {
+      color: #00dd00;
+    }
+
+    .redacted {
+      background: #00ff00;
+      color: black;
+      padding: 0 4px;
+      margin: 0 2px;
+    }
+
+    .back-link {
+      color: #00ff00;
+      text-decoration: underline;
+      display: block;
+      margin: 20px 0;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="scanlines"></div>
+  <div class="terminal">
+    <div class="back-link" onclick="window.location.href='os.html'">← return to terminal</div>
+
+    <div class="log-entry">
+      > LOG 0489 — ACCESS GRANTED TO EMPLOYEE <span class="redacted">███ ███████</span><br>
+      > Timestamp: 2034-08-14 03:21:17
+    </div>
+
+    <div class="log-entry">
+      > LOG 0490 — INTERNAL FILE ACCESSED: <span class="redacted">[REDACTED]</span><br>
+      > Timestamp: 2034-08-14 03:25:02
+    </div>
+
+    <div class="log-entry">
+      > LOG 0491 — UNAUTHORIZED USB DEVICE DETECTED<br>
+      > USER: <span class="redacted">CL349</span><br>
+      > Status: Escalated to Security
+    </div>
+
+    <div class="log-entry">
+      > LOG 0492 — <span class="redacted">ERROR_LOG_CORRUPTED</span><br>
+      > Timestamp: <span class="redacted">██:██:██</span>
+    </div>
+
+    <div class="log-entry">
+      > LOG 0493 — SYSTEM REBOOT INITIATED<br>
+      > Reason: Scheduled maintenance
+    </div>
+
+    <div class="log-entry">
+      > LOG 0494 — EMPLOYEE <span class="redacted">████ █████</span> REMOVED FROM ACCESS LIST<br>
+      > Timestamp: 2034-08-14 04:12:03
+    </div>
+
+    <div class="log-entry">
+      > LOG 0495 — MESSAGE RECEIVED: "we should have never agreed to this."<br>
+      > Flagged for review by Ethics
+    </div>
+
+  </div>
+</body>
+</html>
