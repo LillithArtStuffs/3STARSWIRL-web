@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SOON.</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      color: white;
+      height: 100%;
+      font-family: monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      flex-direction: column;
+    }
+    #terminalLink {
+      position: absolute;
+      top: 10px;
+      left: 15px;
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.2);
+      animation: blink 1s infinite;
+      cursor: pointer;
+      user-select: none;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.6; }
+    }
+    #joinContent {
+      width: 100%;
+      max-width: 600px;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+    }
+    p, #countdown {
+      font-size: 1.5rem;
+      margin-top: 10px;
+    }
+    #logo {
+      font-size: 6rem;
+      margin-top: 40px;
+      cursor: normal;
+      user-select: none;
+    }
+    #logo:hover {
+      cursor: normal;
+    }
+  </style>
+</head>
+<body>
+  <div id="terminalLink" onclick="window.location.href='terminal.html'">_</div>
+  <div id="joinContent">
+    <div id="logo" onclick="window.location.href='morsecode.html';">★★★꩜</div>
+    <h1>BE NOT AFRAID</h1>
+    <p>YOU WILL BE ABLE TO APPLY SOON.</p>
+    <p id="countdown"></p>
+  </div>
+
+  <script>
+    const countdownEl = document.getElementById('countdown');
+
+    // Set your global fixed target date here (year, month (0-based), day)
+    const targetDate = new Date(2025, 8, 20, 0, 0, 0); // Sept 20, 2025 00:00:00
+
+    function updateCountdown() {
+      const now = new Date();
+      const diff = targetDate - now;
+
+      if (diff <= 0) {
+        countdownEl.textContent = "The waitlist is now open!";
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      countdownEl.textContent =
+        `${days}d ${hours}h ${minutes}m ${seconds}s until waitlist opens`;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  </script>
+</body>
+</html>
