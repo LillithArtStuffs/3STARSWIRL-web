@@ -1,38 +1,118 @@
-const express = require("express");
-const session = require("express-session");
-const path = require("path");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Client Key Dashboard</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #111;
+      color: #eee;
+      padding: 2rem;
+    }
+    #login-status {
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+    #generate {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+    }
+    #generate:disabled {
+      background: #444;
+      cursor: not-allowed;
+    }
+    a {
+      color: #0f0;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+    #key {
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
 
-const auth = require("./routes/auth");
-const keys = require("./routes/keys");
-const requireAuth = require("./middleware/requireAuth");
-const devRoutes = require("./routes/dev");
+<h1>Client Key Dashboard</h1>
 
-const app = express();
+<div id="login-status">Checking login status...</div>
 
-// 1️⃣ Body parsing
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+<button id="generate" disabled>Generate Client Key</button>
+<p id="key"></p>
 
-// 2️⃣ Session middleware (must come BEFORE routes)
-app.use(
-  session({
-    secret: "dev-secret-change-later",
-    resave: false,
-    saveUninitialized: false
-  })
-);
+<script>
+const loginStatus = document.getElementById("login-status");
+const generateBtn = document.getElementById("generate");
+const keyParagraph = document.getElementById("key");
 
-// 3️⃣ Serve static files (optional)
-app.use(express.static(path.join(__dirname, "views")));
+// --- Check if user is logged in ---
+async function checkLogin() {
+  try {
+    const res = await fetch("/auth/me");
+    const data = await res.json();
 
-// 4️⃣ Routes
-app.use("/auth", auth);
-app.use("/keys", keys);
-app.use("/dev", devRoutes);
+    if (data.loggedIn) {
+      loginStatus.textContent = `Logged in as: ${data.username}`;
+      generateBtn.disabled = false;
+      loadKeyStatus();
+    } else {
+      loginStatus.textContent = "Not logged in";
+      generateBtn.disabled = true;
+      keyParagraph.textContent = "";
+    }
+  } catch {
+    loginStatus.textContent = "Error checking login";
+    generateBtn.disabled = true;
+  }
+}
 
-// 5️⃣ Protect dashboard
-app.get("/dashboard.html", requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, "views", "dashboard.html"));
+// --- Load existing key (if any) ---
+async function loadKeyStatus() {
+  try {
+    const res = await fetch("/keys/status");
+    const data = await res.json();
+
+    if (data.file) {
+      keyParagraph.innerHTML = `
+        ✅ Key already generated: <a href="/keys-downloads/${data.file}" download>Download Key</a><br>
+        ${data.warning}
+      `;
+      generateBtn.disabled = true;
+    }
+  } catch {
+    keyParagraph.textContent = "";
+  }
+}
+
+// --- Generate new key ---
+generateBtn.addEventListener("click", async () => {
+  try {
+    const res = await fetch("/keys/generate", { method: "POST" });
+    const data = await res.json();
+
+    if (!data.ok && data.msg) {
+      keyParagraph.textContent = data.msg;
+      return;
+    }
+
+    keyParagraph.innerHTML = `
+      ✅ Key file ready: <a href="/keys-downloads/${data.file}" download>Download Key</a><br>
+      ${data.warning}
+    `;
+    generateBtn.disabled = true;
+  } catch {
+    keyParagraph.textContent = "Error generating key!";
+  }
 });
 
-app.listen(3000, () => console.log("Portal server running on http://localhost:3000"));
+// --- Run on page load ---
+checkLogin();
+</script>
+
+</body>
+</html>

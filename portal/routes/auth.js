@@ -64,6 +64,23 @@ router.post("/login", (req, res) => {
   });
 });
 
+//whois on the page to indicate whos who 
+router.get("/me", (req, res) => {
+  if (!req.session || !req.session.userId) {
+    return res.json({ loggedIn: false });
+  }
+
+  db.get("SELECT username FROM users WHERE id = ?", [req.session.userId], (err, row) => {
+    if (err || !row) return res.json({ loggedIn: false });
+
+    res.json({
+      loggedIn: true,
+      username: row.username
+    });
+  });
+});
+
+
 
 
 
