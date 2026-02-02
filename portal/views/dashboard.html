@@ -24,15 +24,26 @@
       background: #444;
       cursor: not-allowed;
     }
-    a {
-      color: #0f0;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
-    #key {
+    #key-container {
       margin-top: 1rem;
+      padding: 1rem;
+      background: #222;
+      border: 1px solid #0f0;
+      word-break: break-all;
+    }
+    #copy-btn {
+      padding: 0.5rem 1rem;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #copy-btn:disabled {
+      background: #444;
+      cursor: not-allowed;
+    }
+    .warning {
+      color: #f55;
+      margin-top: 0.5rem;
     }
   </style>
 </head>
@@ -43,14 +54,19 @@
 <div id="login-status">Checking login status...</div>
 
 <button id="generate" disabled>Generate Client Key</button>
-<p id="key"></p>
+
+<div id="key-container" style="display:none;"></div>
+<button id="copy-btn" disabled>Copy Key to Clipboard</button>
+<div class="warning" id="warning-text"></div>
 
 <script>
 const loginStatus = document.getElementById("login-status");
 const generateBtn = document.getElementById("generate");
-const keyParagraph = document.getElementById("key");
+const keyContainer = document.getElementById("key-container");
+const copyBtn = document.getElementById("copy-btn");
+const warningText = document.getElementById("warning-text");
 
-// --- Check if user is logged in ---
+// --- check if user is logged in ---
 async function checkLogin() {
   try {
     const res = await fetch("/auth/me");
@@ -63,7 +79,6 @@ async function checkLogin() {
     } else {
       loginStatus.textContent = "Not logged in";
       generateBtn.disabled = true;
-      keyParagraph.textContent = "";
     }
   } catch {
     loginStatus.textContent = "Error checking login";
@@ -71,46 +86,63 @@ async function checkLogin() {
   }
 }
 
-// --- Load existing key (if any) ---
+// --- load existing key ---
 async function loadKeyStatus() {
   try {
     const res = await fetch("/keys/status");
     const data = await res.json();
 
     if (data.file) {
-      keyParagraph.innerHTML = `
-        ✅ Key already generated: <a href="/keys-downloads/${data.file}" download>Download Key</a><br>
-        ${data.warning}
-      `;
+      // fetch the key content from server (return raw key instead of file)
+      const keyRes = await fetch(`/keys/get-key?file=${encodeURIComponent(data.file)}`);
+      const keyText = await keyRes.text();
+
+      showKey(keyText, data.warning);
       generateBtn.disabled = true;
     }
   } catch {
-    keyParagraph.textContent = "";
+    // no key yet
   }
 }
 
-// --- Generate new key ---
+// --- show key in box ---
+function showKey(keyText, warning) {
+  keyContainer.style.display = "block";
+  keyContainer.textContent = keyText;
+  copyBtn.disabled = false;
+  warningText.textContent = "⚠️ Copy this key and save it in a text file. It will not be shown again!";
+}
+
+// --- generate new key ---
 generateBtn.addEventListener("click", async () => {
   try {
     const res = await fetch("/keys/generate", { method: "POST" });
     const data = await res.json();
 
     if (!data.ok && data.msg) {
-      keyParagraph.textContent = data.msg;
+      warningText.textContent = data.msg;
       return;
     }
 
-    keyParagraph.innerHTML = `
-      ✅ Key file ready: <a href="/keys-downloads/${data.file}" download>Download Key</a><br>
-      ${data.warning}
-    `;
+    // fetch the actual key string
+    const keyRes = await fetch(`/keys/get-key?file=${encodeURIComponent(data.file)}`);
+    const keyText = await keyRes.text();
+
+    showKey(keyText, data.warning);
     generateBtn.disabled = true;
   } catch {
-    keyParagraph.textContent = "Error generating key!";
+    warningText.textContent = "Error generating key!";
   }
 });
 
-// --- Run on page load ---
+// --- copy to clipboard ---
+copyBtn.addEventListener("click", () => {
+  navigator.clipboard.writeText(keyContainer.textContent)
+    .then(() => alert("✅ Key copied! Paste it into a text file and save it somewhere safe."))
+    .catch(() => alert("⚠️ Failed to copy key. Copy manually."));
+});
+
+// --- run on page load ---
 checkLogin();
 </script>
 
