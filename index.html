@@ -248,6 +248,20 @@
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
   }
 
+  function getClientFlags(){
+    try{ return JSON.parse(localStorage.getItem('swirl_flags') || '[]'); }
+    catch(e){ return []; }
+  }
+
+  function addClientFlag(flag){
+    if(!flag) return;
+    const flags = getClientFlags();
+    if(!flags.includes(flag)){
+      flags.push(flag);
+      localStorage.setItem('swirl_flags', JSON.stringify(flags));
+    }
+  }
+
   async function findSpecial(raw){
     const n = raw.trim().toLowerCase();
     if(!n) return null;
@@ -258,12 +272,19 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: n,
-          ownerKey: localStorage.getItem('swirl_owner_key') || ''
+          ownerKey: localStorage.getItem('swirl_owner_key') || '',
+          flags: getClientFlags()
         })
       });
       const data = await res.json();
       if(!data.found) return null;
-      return { lines: data.lines, actions: data.actions || [], setSessionCookie: !!data.setSessionCookie };
+      return {
+        lines: data.lines,
+        lineDelayMs: data.lineDelayMs || 0,
+        actions: data.actions || [],
+        setSessionCookie: !!data.setSessionCookie,
+        setClientFlag: data.setClientFlag || null
+      };
     } catch(e){
       // function unreachable (e.g. opening this file locally instead of
       // via a real Netlify deploy) — fail closed, no special names fire
@@ -308,19 +329,20 @@
   // prints one or more lines, each an array of {t, c} segments.
   // c defaults to 'amber' (the existing "special response" color)
   // when not specified; also supports 'red', 'grey', 'purple'.
-  function printResponseLines(lines){
-    lines.forEach(segments => {
+  async function printResponseLines(lines, lineDelayMs){
+    for(let i = 0; i < lines.length; i++){
       const el = document.createElement('div');
       el.className = 'line';
-      segments.forEach(seg => {
+      lines[i].forEach(seg => {
         const span = document.createElement('span');
         span.className = 'seg-' + (seg.c || 'amber');
         span.textContent = seg.t;
         el.appendChild(span);
       });
       linesEl.appendChild(el);
-    });
-    scrollDown();
+      scrollDown();
+      if(lineDelayMs && i < lines.length - 1) await sleep(lineDelayMs);
+    }
   }
 
   // runs the optional action list attached to a name response, in order
@@ -454,10 +476,12 @@
   // boot banner / boot sequence
   // ---------------------------------------------------------------
 
+  const BUILD_VERSION = '0.2.1';
+
   function bannerBeats(){
     return [
       { lines: [{ text: '3STARSWIRL TERMINAL', accent: true }], holdMs: 260 },
-      { lines: [{ text: 'local logging system // build 0.2', dim: true }], holdMs: 260 },
+      { lines: [{ text: 'local logging system // build ' + BUILD_VERSION, dim: true }], holdMs: 260 },
       { lines: [{ text: '' }], holdMs: 120 }
     ];
   }
@@ -531,17 +555,14 @@
 
   const HELP_LINES = [
     'owner commands:',
-    '  rename    - clears the screen and re-runs the name prompt,',
-    '              so you can test different names back to back',
-    '  glitch1   - reloads the page and forces the intro glitch',
-    '              ("why did you leave me...") to play on load',
-    '  glitch2   - fires the idle "i built this for you" glitch',
-    '              immediately, no waiting on the random timer',
-    '  glitch3   - fires the "you aren\'t her" erase/shake/close',
-    '              glitch immediately, no waiting on random odds',
-    '  listname  - fetches and lists every recognized name from',
-    '              the server, alphabetized',
-    '  help      - shows this list'
+    '  rename            - test names again',
+    '  glitch1           - replay intro glitch',
+    '  glitch2           - fire idle glitch now',
+    '  glitch3           - fire "her" glitch now',
+    '  listname          - list all names + total',
+    '  listname -<ver>   - list names from a version',
+    '  newnames          - list names added this version',
+    '  help              - show this list'
   ];
 
   // vanishingly rare: selecting a menu option by number or click can,
@@ -570,6 +591,40 @@
     await sleep(500);
 
     try{ window.close(); } catch(e){}
+  }
+
+  // shared by 'listname' (optional version arg) and 'newnames' (current version)
+  function fetchNameList(version){
+    fetch('/.netlify/functions/checkname', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        listNames: true,
+        ownerKey: localStorage.getItem('swirl_owner_key') || '',
+        version: version || null
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if(!data.found){
+          addLine('unable to verify owner key.', { amber: true });
+          return;
+        }
+        if(!data.names.length){
+          addLine(version ? `no names found for version ${version}.` : 'no names found.', { dim: true });
+          return;
+        }
+        const header = version
+          ? `names added in ${version}:`
+          : 'all names:';
+        printBeats([
+          { lines: [{ text: header, dim: true }], holdMs: 0 },
+          { lines: data.names.map(n => ({ text: '  ' + n, dim: true })), holdMs: 0 },
+          { lines: [{ text: `${data.total} total`, accent: true }], holdMs: 0 },
+          { lines: [{ text: '' }], holdMs: 0 }
+        ]);
+      })
+      .catch(() => addLine('name list unavailable right now.', { amber: true }));
   }
 
   function runCommand(raw, isNumericTrigger){
@@ -645,24 +700,15 @@
       return;
     }
 
-    if(val === 'listname' && isOwnerVerified()){
-      fetch('/.netlify/functions/checkname', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ listNames: true, ownerKey: localStorage.getItem('swirl_owner_key') || '' })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if(!data.found){
-            addLine('unable to verify owner key.', { amber: true });
-            return;
-          }
-          printBeats([
-            { lines: data.names.map(n => ({ text: '  ' + n, dim: true })), holdMs: 0 },
-            { lines: [{ text: '' }], holdMs: 0 }
-          ]);
-        })
-        .catch(() => addLine('listname unavailable right now.', { amber: true }));
+    if((val === 'listname' || val.startsWith('listname ')) && isOwnerVerified()){
+      const rest = val.slice('listname'.length).trim();
+      const version = rest.startsWith('-') ? rest.slice(1).trim() : null;
+      fetchNameList(version);
+      return;
+    }
+
+    if(val === 'newnames' && isOwnerVerified()){
+      fetchNameList(BUILD_VERSION);
       return;
     }
 
@@ -733,11 +779,15 @@
       document.cookie = 'swirl_session=' + Date.now().toString(36) + '; path=/';
     }
 
+    if(result && result.setClientFlag){
+      addClientFlag(result.setClientFlag);
+    }
+
     if(hasLines){
       await sleep(200);
       consoleEl.classList.add('glitch-hit');
       setTimeout(() => consoleEl.classList.remove('glitch-hit'), 320);
-      printResponseLines(result.lines);
+      await printResponseLines(result.lines, result.lineDelayMs);
       await sleep(400);
 
       if(result.actions && result.actions.length){
@@ -783,3 +833,4 @@
 
 </body>
 </html>
+
