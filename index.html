@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3STARSWIRL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0d0b;
+    --text: #d7dbd7;
+    --text-dim: #6b756b;
+    --accent: #6fe08a;
+    --amber: #ffcc4d;
+    --red: #ff3b3b;
+    --purple: #b478ff;
+  }
+
+  /* activated for a limited time after certain scripted events —
+     overriding these custom properties re-colors everything on
+     screen, since every element below already reads from them */
+  html.purple-mode{
+    --bg: #0d0715;
+    --text: #caa6ff;
+    --text-dim: #8a6bb0;
+    --accent: #b478ff;
+    --amber: #c9a3ff;
+    --red: #ff6bd6;
+    --purple: #d9b8ff;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  body{
+    font-family: 'JetBrains Mono', Consolas, 'SFMono-Regular', Menlo, monospace;
+  }
+
+  .console{
+    height: 100vh;
+    height: 100dvh;
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 18px 18px 14px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .console::-webkit-scrollbar{ width: 10px; }
+  .console::-webkit-scrollbar-track{ background: var(--bg); }
+  .console::-webkit-scrollbar-thumb{ background: #23281f; border: 2px solid var(--bg); }
+
+  .lines{
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .line{ min-height: 1.5em; }
+  .line.dim{ color: var(--text-dim); }
+  .line.amber{ color: var(--amber); }
+  .line.accent{ color: var(--accent); }
+  .line.red{ color: var(--red); }
+
+  .seg-amber{ color: var(--amber); }
+  .seg-red{ color: var(--red); }
+  .seg-grey{ color: var(--text-dim); }
+  .seg-purple{ color: var(--purple); }
+
+  .shake-hard{
+    animation: shake-hard 0.5s ease-in-out 1;
+  }
+
+  @keyframes shake-hard{
+    0%{ transform: translate(0,0); }
+    15%{ transform: translate(-6px, 3px); }
+    30%{ transform: translate(6px, -3px); }
+    45%{ transform: translate(-5px, 2px); }
+    60%{ transform: translate(5px, -2px); }
+    75%{ transform: translate(-3px, 1px); }
+    90%{ transform: translate(3px, -1px); }
+    100%{ transform: translate(0,0); }
+  }
+
+  /* ---- prompt / input ---- */
+
+  .prompt-row{
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+
+  .prompt-label{
+    color: var(--accent);
+    white-space: pre;
+  }
+
+  .console-input{
+    flex: 1;
+    min-width: 60px;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: inherit;
+    font-size: 15px;
+    caret-color: var(--text);
+    padding: 0;
+    margin-left: 6px;
+  }
+
+  /* ---- menu items (also typeable) ---- */
+
+  .menu-item{
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .menu-item:hover{
+    color: var(--amber);
+    text-decoration: underline;
+  }
+
+  .menu-key{ color: var(--accent); }
+
+  /* ---- glitch hit on special names ---- */
+
+  .glitch-hit{
+    animation: glitch-hit 0.3s steps(3) 1;
+  }
+
+  @keyframes glitch-hit{
+    0%{ transform: translate(0,0); }
+    25%{ transform: translate(-2px, 1px); }
+    50%{ transform: translate(2px, -1px); }
+    75%{ transform: translate(-1px, 0); }
+    100%{ transform: translate(0,0); }
+  }
+
+  /* ---- full screen flash ---- */
+
+  .flash-overlay{
+    position: fixed;
+    inset: 0;
+    background: #ffffff;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 200;
+  }
+
+  .flash-overlay.on{
+    opacity: 1;
+    transition: opacity 60ms linear;
+  }
+
+  .flash-overlay.off{
+    opacity: 0;
+    transition: opacity 220ms ease-out;
+  }
+
+  /* ---- intro dark-sequence text ---- */
+
+  .intro-stage{
+    position: fixed;
+    inset: 0;
+    background: #000;
+    color: var(--red);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: clamp(18px, 4.5vw, 30px);
+    line-height: 1.6;
+    white-space: pre-line;
+    z-index: 150;
+    padding: 20px;
+  }
+
+  .intro-stage.white-text{
+    color: var(--text);
+  }
+
+  @media (max-width: 520px){
+    .console{ font-size: 14px; padding: 14px 12px 10px; }
+    .console-input{ font-size: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<div class="console" id="console">
+  <div class="lines" id="lines"></div>
+  <div class="prompt-row" id="inputRow" style="display:none;">
+    <span class="prompt-label" id="promptLabel">root@3starswirl:~$</span>
+    <input id="cmdField" class="console-input" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" />
+  </div>
+</div>
+
+<script>
+(function(){
+
+  const consoleEl = document.getElementById('console');
+  const linesEl = document.getElementById('lines');
+  const inputRow = document.getElementById('inputRow');
+  const cmdField = document.getElementById('cmdField');
+  const promptLabel = document.getElementById('promptLabel');
+  const flashOverlay = document.getElementById('flashOverlay');
+
+  let hostUser = 'root';
+  let menuShown = false;
+
+  function setPromptUser(name){
+    hostUser = name;
+    promptLabel.textContent = `${hostUser}@3starswirl:~$`;
+  }
+
+  function promptText(){
+    return `${hostUser}@3starswirl:~$`;
+  }
+
+  function scrollDown(){
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+  }
+
+  function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+  // ---------------------------------------------------------------
+  // name-response system — now server-backed
+  // the real name list and response text live ONLY in the Netlify
+  // function (netlify/functions/checkname.js), which never gets sent
+  // to the browser. this file just asks the server "does this name
+  // match anything?" and gets back only the one relevant answer.
+  // ---------------------------------------------------------------
+
+  async function sha256Hex(str){
+    const enc = new TextEncoder().encode(str);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function findSpecial(raw){
+    const n = raw.trim().toLowerCase();
+    if(!n) return null;
+
+    try{
+      const res = await fetch('/.netlify/functions/checkname', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: n,
+          ownerKey: localStorage.getItem('swirl_owner_key') || ''
+        })
+      });
+      const data = await res.json();
+      if(!data.found) return null;
+      return { lines: data.lines, actions: data.actions || [], setSessionCookie: !!data.setSessionCookie };
+    } catch(e){
+      // function unreachable (e.g. opening this file locally instead of
+      // via a real Netlify deploy) — fail closed, no special names fire
+      return null;
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // owner verification (device-lock)
+  // this is a static site with no backend of its own, so there's no way
+  // to check WHO is typing — only whether THIS browser has been unlocked
+  // before. visiting once with ?unlock=<passphrase> that matches this
+  // hash sets a permanent localStorage flag AND stores the passphrase,
+  // which then gets sent along with each name check so the SERVER can
+  // independently re-verify it. tampering with localStorage alone can't
+  // fake this — the real check happens server-side now.
+  // ---------------------------------------------------------------
+
+  const OWNER_UNLOCK_HASH = '337960b05ca2c8c1550e5e7ee82fc1939d7b8593daf1a7016ff5efc178df8cdb';
+
+  function isOwnerVerified(){
+    return localStorage.getItem('swirl_owner') === '1';
+  }
+
+  async function checkOwnerUnlock(){
+    const params = new URLSearchParams(location.search);
+    const attempt = params.get('unlock');
+    if(!attempt) return;
+
+    const hash = await sha256Hex(attempt.trim());
+    if(hash === OWNER_UNLOCK_HASH){
+      localStorage.setItem('swirl_owner', '1');
+      localStorage.setItem('swirl_owner_key', attempt.trim());
+    }
+
+    // strip the query param either way so it doesn't sit in the address bar/history
+    params.delete('unlock');
+    const clean = location.pathname + (params.toString() ? '?' + params.toString() : '');
+    history.replaceState({}, '', clean);
+  }
+
+  // prints one or more lines, each an array of {t, c} segments.
+  // c defaults to 'amber' (the existing "special response" color)
+  // when not specified; also supports 'red', 'grey', 'purple'.
+  function printResponseLines(lines){
+    lines.forEach(segments => {
+      const el = document.createElement('div');
+      el.className = 'line';
+      segments.forEach(seg => {
+        const span = document.createElement('span');
+        span.className = 'seg-' + (seg.c || 'amber');
+        span.textContent = seg.t;
+        el.appendChild(span);
+      });
+      linesEl.appendChild(el);
+    });
+    scrollDown();
+  }
+
+  // runs the optional action list attached to a name response, in order
+  async function runResponseActions(actions){
+    for(const a of (actions || [])){
+      if(a.type === 'wait'){
+        await sleep(a.ms || 0);
+      } else if(a.type === 'setPurpleFlag'){
+        localStorage.setItem('purpleModeTrigger', String(a.ms || 30000));
+      } else if(a.type === 'closeTab'){
+        // note: browsers generally only allow scripts to close tabs
+        // they themselves opened via window.open(). on a normal tab
+        // (typed URL, bookmark, etc.) this call is often silently
+        // blocked — that's a browser restriction, not a bug here.
+        try{ window.close(); } catch(e){}
+      }
+    }
+  }
+
+  // checks for a pending purple-mode flag left by a prior scripted event
+  // and activates it for the remaining browser session on this page load
+  function checkPurpleMode(){
+    const raw = localStorage.getItem('purpleModeTrigger');
+    if(!raw) return;
+    localStorage.removeItem('purpleModeTrigger');
+    const ms = parseInt(raw, 10) || 30000;
+    document.documentElement.classList.add('purple-mode');
+    setTimeout(() => document.documentElement.classList.remove('purple-mode'), ms);
+  }
+
+  // ---------------------------------------------------------------
+  // basic line printing / beats
+  // ---------------------------------------------------------------
+
+  function addLine(text, opts){
+    const el = document.createElement('div');
+    el.className = 'line' +
+      (opts && opts.amber ? ' amber' : '') +
+      (opts && opts.dim ? ' dim' : '') +
+      (opts && opts.accent ? ' accent' : '') +
+      (opts && opts.red ? ' red' : '');
+    el.textContent = text;
+    linesEl.appendChild(el);
+    scrollDown();
+    return el;
+  }
+
+  function printBeat(lines, holdMs){
+    return new Promise(resolve => {
+      lines.forEach(l => addLine(l.text, l));
+      setTimeout(resolve, holdMs !== undefined ? holdMs : 220);
+    });
+  }
+
+  async function printBeats(beats){
+    for(const beat of beats){
+      await printBeat(beat.lines, beat.holdMs);
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // full-screen flash effect
+  // ---------------------------------------------------------------
+
+  function flashWhite(holdMs){
+    return new Promise(resolve => {
+      flashOverlay.classList.remove('off');
+      flashOverlay.classList.add('on');
+      setTimeout(() => {
+        flashOverlay.classList.remove('on');
+        flashOverlay.classList.add('off');
+        setTimeout(resolve, 220);
+      }, holdMs || 70);
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // rare intro dark-sequence: "why did you leave me" / "why did you forget me"
+  // ---------------------------------------------------------------
+
+  function showIntroStage(text, opts){
+    const stage = document.createElement('div');
+    stage.className = 'intro-stage' + (opts && opts.white ? ' white-text' : '');
+    stage.textContent = text;
+    document.body.appendChild(stage);
+    return stage;
+  }
+
+  async function maybeRunDarkIntro(force){
+    if(!force && Math.random() > 0.14) return false; // ~14% chance normally
+
+    const stage1 = showIntroStage('why did you leave me');
+    await sleep(950);
+
+    await flashWhite(90);
+    stage1.remove();
+
+    const stage2 = showIntroStage('why did you\nforget\nme', { white: true });
+    await sleep(1300);
+
+    await flashWhite(90);
+    stage2.remove();
+
+    return true;
+  }
+
+  // ---------------------------------------------------------------
+  // rare mid-session glitch: "i built this for you / why don't you / like it     ?"
+  // only fires while idle at the prompt, after boot has completed
+  // ---------------------------------------------------------------
+
+  async function fireBuiltForYouGlitch(){
+    await flashWhite(80);
+    addLine('i built this for you', {});
+    addLine("why don't you", {});
+    addLine('like it      ?', {});
+    addLine('');
+    scrollDown();
+  }
+
+  function startIdleGlitchWatcher(){
+    setInterval(async () => {
+      if(!menuShown) return;
+      if(document.activeElement === cmdField && cmdField.value.trim() !== '') return;
+      if(Math.random() > 0.08) return; // ~8% chance per check
+      await fireBuiltForYouGlitch();
+    }, 42000);
+  }
+
+  // ---------------------------------------------------------------
+  // boot banner / boot sequence
+  // ---------------------------------------------------------------
+
+  function bannerBeats(){
+    return [
+      { lines: [{ text: '3STARSWIRL TERMINAL', accent: true }], holdMs: 260 },
+      { lines: [{ text: 'local logging system // build 0.2', dim: true }], holdMs: 260 },
+      { lines: [{ text: '' }], holdMs: 120 }
+    ];
+  }
+
+  function bootBeats(displayName){
+    return [
+      { lines: [{ text: 'initializing kernel...', dim: true }], holdMs: 260 },
+      { lines: [{ text: 'mounting local archive............ ok', dim: true }], holdMs: 420 },
+      { lines: [
+          { text: 'calibrating log tree............... ok', dim: true },
+          { text: 'loading shell....................... ok', dim: true }
+        ], holdMs: 320 },
+      { lines: [{ text: `welcome back, ${displayName.toLowerCase()}.` }], holdMs: 300 },
+      { lines: [{ text: '' }], holdMs: 100 }
+    ];
+  }
+
+  const MENU_ITEMS = [
+    { key: '1', word: 'about',    label: 'about 3starswirl', href: null },
+    { key: '2', word: 'download', label: 'get the app',      href: null },
+    { key: '3', word: 'archive',  label: 'view the archive', href: null },
+    { key: '4', word: 'contact',  label: 'contact / signal', href: null }
+  ];
+
+  async function printMenu(){
+    const menuLines = MENU_ITEMS.map(item => {
+      const span = document.createElement('span');
+      span.className = 'menu-item';
+      span.innerHTML = `  <span class="menu-key">[${item.key}]</span> ${item.word.padEnd(9,' ')} - ${item.label}`;
+      span.addEventListener('click', (e) => { e.preventDefault(); runCommand(item.word, true); });
+      return span;
+    });
+
+    addLine('available commands:', { dim: true });
+    for(const span of menuLines){
+      const row = document.createElement('div');
+      row.className = 'line';
+      row.appendChild(span);
+      linesEl.appendChild(row);
+    }
+    scrollDown();
+    await sleep(260);
+
+    await printBeats([
+      { lines: [{ text: '' }, { text: 'type a number or command name, then press enter.', dim: true }, { text: '' }], holdMs: 0 }
+    ]);
+
+    menuShown = true;
+  }
+
+  const ABOUT_LINES = [
+    '3STARSWIRL IS AN EXPERIMENTAL MEDIA INITIATIVE CREATED FOR THE',
+    'PURPOSE OF ENTERTAINMENT. WE ARE NOT RESPONSIBLE FOR ANY MISHAPS',
+    'WHEN USING OUR PRODUCTS.'
+  ];
+
+  const DOWNLOAD_LINES = [
+    'THERE IS NOTHING TO DOWNLOAD.',
+    'YET.'
+  ];
+
+  const ARCHIVE_LINES = [
+    'COME BACK SOON.',
+    "THAT ISN'T READY FOR YOU TO SEE YET."
+  ];
+
+  const CONTACT_LINES = [
+    'CONTACT IF NEEDED.',
+    '3starswirl@gmail.com'
+  ];
+
+  const HELP_LINES = [
+    'owner commands:',
+    '  rename    - clears the screen and re-runs the name prompt,',
+    '              so you can test different names back to back',
+    '  glitch1   - reloads the page and forces the intro glitch',
+    '              ("why did you leave me...") to play on load',
+    '  glitch2   - fires the idle "i built this for you" glitch',
+    '              immediately, no waiting on the random timer',
+    '  glitch3   - fires the "you aren\'t her" erase/shake/close',
+    '              glitch immediately, no waiting on random odds',
+    '  listname  - fetches and lists every recognized name from',
+    '              the server, alphabetized',
+    '  help      - shows this list'
+  ];
+
+  // vanishingly rare: selecting a menu option by number or click can,
+  // very occasionally, do this instead of the normal response.
+  async function triggerHerGlitch(){
+    linesEl.innerHTML = '';
+    inputRow.style.display = 'none';
+
+    const el = document.createElement('div');
+    el.className = 'line red';
+    linesEl.appendChild(el);
+
+    const message = "you aren't her. you couldn't even try to be her.";
+    const totalMs = 5000;
+    const perChar = totalMs / message.length;
+
+    for(let i = 0; i < message.length; i++){
+      el.textContent += message[i];
+      scrollDown();
+      const jitter = (Math.random() * perChar * 0.6) - (perChar * 0.3);
+      await sleep(Math.max(10, perChar + jitter));
+    }
+
+    await sleep(400);
+    consoleEl.classList.add('shake-hard');
+    await sleep(500);
+
+    try{ window.close(); } catch(e){}
+  }
+
+  function runCommand(raw, isNumericTrigger){
+    const val = raw.trim().toLowerCase();
+    const numericTrigger = !!isNumericTrigger || ['1','2','3','4'].includes(val);
+
+    if(numericTrigger && ['about','download','archive','contact','1','2','3','4'].includes(val)){
+      if(Math.random() < 0.02){ // ~2% chance
+        triggerHerGlitch();
+        return;
+      }
+    }
+
+    if(val === 'about' || val === '1'){
+      printBeats([
+        { lines: ABOUT_LINES.map(t => ({ text: t })), holdMs: 0 },
+        { lines: [{ text: '' }], holdMs: 0 }
+      ]);
+      return;
+    }
+
+    if(val === 'download' || val === '2'){
+      printBeats([
+        { lines: DOWNLOAD_LINES.map(t => ({ text: t })), holdMs: 0 },
+        { lines: [{ text: '' }], holdMs: 0 }
+      ]);
+      return;
+    }
+
+    if(val === 'archive' || val === '3'){
+      printBeats([
+        { lines: ARCHIVE_LINES.map(t => ({ text: t })), holdMs: 0 },
+        { lines: [{ text: '' }], holdMs: 0 }
+      ]);
+      return;
+    }
+
+    if(val === 'contact' || val === '4'){
+      printBeats([
+        { lines: CONTACT_LINES.map(t => ({ text: t })), holdMs: 0 },
+        { lines: [{ text: '' }], holdMs: 0 }
+      ]);
+      return;
+    }
+
+    if(val === 'rename' && isOwnerVerified()){
+      linesEl.innerHTML = '';
+      runNamePromptFlow(false);
+      return;
+    }
+
+    if(val === 'glitch1' && isOwnerVerified()){
+      sessionStorage.setItem('forceDarkIntro', '1');
+      location.reload();
+      return;
+    }
+
+    if(val === 'glitch2' && isOwnerVerified()){
+      fireBuiltForYouGlitch();
+      return;
+    }
+
+    if(val === 'glitch3' && isOwnerVerified()){
+      triggerHerGlitch();
+      return;
+    }
+
+    if(val === 'help' && isOwnerVerified()){
+      printBeats([
+        { lines: HELP_LINES.map(t => ({ text: t, dim: true })), holdMs: 0 },
+        { lines: [{ text: '' }], holdMs: 0 }
+      ]);
+      return;
+    }
+
+    if(val === 'listname' && isOwnerVerified()){
+      fetch('/.netlify/functions/checkname', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listNames: true, ownerKey: localStorage.getItem('swirl_owner_key') || '' })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(!data.found){
+            addLine('unable to verify owner key.', { amber: true });
+            return;
+          }
+          printBeats([
+            { lines: data.names.map(n => ({ text: '  ' + n, dim: true })), holdMs: 0 },
+            { lines: [{ text: '' }], holdMs: 0 }
+          ]);
+        })
+        .catch(() => addLine('listname unavailable right now.', { amber: true }));
+      return;
+    }
+
+    const match = MENU_ITEMS.find(m => m.key === val || m.word === val);
+    if(match && match.href){
+      addLine(`opening ${match.label}...`, { dim: true });
+      setTimeout(() => { location.href = match.href; }, 350);
+    } else if(val === 'clear' || val === 'cls'){
+      linesEl.innerHTML = '';
+      printBeats(bannerBeats()).then(printMenu);
+    } else if(val){
+      addLine(`'${raw.trim()}' is not recognized. type a number 1-4.`, { amber: true });
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // flow
+  // ---------------------------------------------------------------
+
+  async function runNamePromptFlow(withDarkIntroChance){
+    if(withDarkIntroChance){
+      const forced = sessionStorage.getItem('forceDarkIntro') === '1';
+      if(forced) sessionStorage.removeItem('forceDarkIntro');
+      const ran = await maybeRunDarkIntro(forced);
+      if(ran) await sleep(120);
+    }
+
+    await printBeats(bannerBeats());
+    await printBeat([{ text: 'state your name to continue:' }], 60);
+    showNamePrompt();
+  }
+
+  async function begin(){
+    checkPurpleMode();
+    await checkOwnerUnlock();
+    await runNamePromptFlow(true);
+  }
+
+  function showNamePrompt(){
+    setPromptUser('root');
+    inputRow.style.display = 'flex';
+    cmdField.value = '';
+    cmdField.disabled = false;
+    cmdField.focus();
+    scrollDown();
+
+    cmdField.onkeydown = (e) => {
+      if(e.key === 'Enter'){
+        const val = cmdField.value;
+        cmdField.disabled = true;
+        inputRow.style.display = 'none';
+        addLine(promptText() + ' ' + val);
+        handleNameSubmit(val);
+      }
+    };
+  }
+
+  async function handleNameSubmit(raw){
+    const value = raw.trim();
+    if(!value){ showNamePrompt(); return; }
+
+    const result = await findSpecial(value);
+    const hasLines = result && result.lines && result.lines.length;
+
+    if(result && result.setSessionCookie){
+      // session cookie: cleared when the browser closes, not before.
+      // no name/hash is stored in the value on purpose.
+      document.cookie = 'swirl_session=' + Date.now().toString(36) + '; path=/';
+    }
+
+    if(hasLines){
+      await sleep(200);
+      consoleEl.classList.add('glitch-hit');
+      setTimeout(() => consoleEl.classList.remove('glitch-hit'), 320);
+      printResponseLines(result.lines);
+      await sleep(400);
+
+      if(result.actions && result.actions.length){
+        await runResponseActions(result.actions);
+        // scripted sequences that end in closing the tab are a dead end —
+        // don't fall through into the normal boot sequence after
+        if(result.actions.some(a => a.type === 'closeTab')) return;
+      }
+    } else {
+      await sleep(120);
+    }
+
+    // hostname switches from root to the given name once it's known
+    setPromptUser(value.toLowerCase());
+
+    await printBeats(bootBeats(value));
+    await printMenu();
+
+    startIdleGlitchWatcher();
+
+    // persistent shell prompt after boot
+    inputRow.style.display = 'flex';
+    cmdField.value = '';
+    cmdField.disabled = false;
+    cmdField.focus();
+    scrollDown();
+
+    cmdField.onkeydown = (e) => {
+      if(e.key === 'Enter'){
+        const val = cmdField.value;
+        cmdField.value = '';
+        addLine(promptText() + ' ' + val);
+        runCommand(val);
+        scrollDown();
+      }
+    };
+  }
+
+  begin();
+
+})();
+</script>
+
+</body>
+</html>
