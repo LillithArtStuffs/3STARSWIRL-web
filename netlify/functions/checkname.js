@@ -11,76 +11,81 @@ const OWNER_UNLOCK_HASH = '337960b05ca2c8c1550e5e7ee82fc1939d7b8593daf1a7016ff5e
 
 // Each entry:
 //   names: aliases that trigger this entry (matched lowercase)
+//   addedIn: version string this entry was introduced in (for listname/newnames)
 //   lines: array of lines, each line is an array of {t: text, c: color}
 //          color options: 'amber' (default), 'red', 'grey', 'purple'
+//   lineDelayMs: optional pause between each line as it prints (default 0)
 //   actions: optional, run in order after the lines print
 //            { type: 'wait', ms }
 //            { type: 'closeTab' }
-//            { type: 'setPurpleFlag', ms }  -- next page load goes purple for ms
+//            { type: 'setPurpleFlag', ms }   -- next page load goes purple for ms
+//   requiresFlag: optional — this entry only fires if the client has
+//                 previously been granted this flag by another entry
+//   setClientFlag: optional — grants the client this flag once matched
 //   ownerOnly / setSessionCookie: same meaning as before
 //
 // This is the ONLY place the real name list and response text exist.
 // This file runs on Netlify's servers and is never sent to a browser.
 const NAME_TABLE = [
-  { names: ['geoffrey', 'geoff'], lines: [
+  { names: ['geoffrey', 'geoff'], addedIn: '0.1', lines: [
     [{ t: 'A MAN OF PHSYCHOLOGY IS WITHIN OUR MIDST? VERY INTERESTING.' }]
   ]},
-  { names: ['lillith', 'lills', 'lillithartstuffs'], lines: [
+  { names: ['lillith', 'lills', 'lillithartstuffs'], addedIn: '0.1', lines: [
     [{ t: "THAT ISN'T YOUR TRUE NAME, NOW IS IT?" }]
   ]},
-  { names: ['therapist'], lines: [
+  { names: ['therapist'], addedIn: '0.1', lines: [
     [{ t: "I KNOW IT'S YOU." }]
   ]},
-  { names: ['colt'], lines: [
+  { names: ['colt'], addedIn: '0.1', lines: [
     [{ t: 'TRULY, JUST TRULY SOMEBODY WORTH HAVING ON BOARD. WELCOME, COLTON.' }]
   ]},
-  { names: ['colton'], lines: [
+  { names: ['colton'], addedIn: '0.1', lines: [
     [{ t: 'TRULY, JUST TRULY SOMEBODY WORTH HAVING ON BOARD.' }]
   ]},
-  { names: ['eli', 'sean', 'nia'], lines: [
+  { names: ['eli', 'sean', 'nia'], addedIn: '0.1', lines: [
     [{ t: 'TRULY, JUST TRULY SOMEBODY WORTH HAVING ON BOARD.' }]
   ]},
-  { names: ['zoie'], lines: [
+  { names: ['zoie'], addedIn: '0.1', lines: [
     [{ t: "WELL, WELL, WELL. YOU'RE AN " }, { t: 'INTERESTING', c: 'red' }, { t: ' ONE.' }]
   ]},
-  { names: ['aven'], ownerOnly: true, setSessionCookie: true, lines: [
+  { names: ['aven'], addedIn: '0.1', ownerOnly: true, setSessionCookie: true, lines: [
     [{ t: 'my muse.' }]
   ]},
-  { names: ['mori'], lines: [
+  { names: ['mori'], addedIn: '0.1', lines: [
     [{ t: 'WELCOME, CHILD OF THE TREES.' }]
   ]},
-  { names: ['izzy', 'luna', 'lena', 'velvet'], lines: [
+  { names: ['izzy', 'luna', 'lena', 'velvet'], addedIn: '0.1', lines: [
     [{ t: 'WELCOME, WELCOME ALL. YOU WILL BE ' }, { t: 'MOST ENTERTAINING', c: 'red' }, { t: '.' }]
   ]},
 
-  // --- new batch ---
+  // --- 0.2 batch ---
 
-  { names: ['marcy'], lines: [
+  { names: ['marcy'], addedIn: '0.2', lines: [
     [{ t: "THAT ISN'T YOUR TRUE NAME IS IT, " }, { t: 'FINN?', c: 'red' }]
   ]},
-  { names: ['finn'], lines: [
+  { names: ['finn'], addedIn: '0.2', lines: [
     [{ t: 'I APPRECIATE YOUR HONESTY. PROCEED.' }]
   ]},
-  { names: ['ash'], lines: [
+  { names: ['ash'], addedIn: '0.2', requiresFlag: 'seenZender', lineDelayMs: 1600, lines: [
     [{ t: 'haha i remember your purples', c: 'purple' }],
     [{ t: '…What?', c: 'grey' }]
   ]},
-  { names: ['mom'], lines: [
+  { names: ['mom'], addedIn: '0.2', lines: [
     [{ t: 'HAPPY FAMILY, IS IT NOT?' }]
   ]},
-  { names: ['mia'], lines: [
+  { names: ['mia'], addedIn: '0.2', lines: [
     [{ t: 'YOU DONT deserve TO BE HERE' }]
   ]},
-  { names: ['dad'], lines: [
+  { names: ['dad'], addedIn: '0.2', lines: [
     [{ t: 'IT COULD BE happier, COULDNT IT?' }]
   ]},
-  { names: ['brian'], lines: [
+  { names: ['brian'], addedIn: '0.2', lines: [
     [{ t: 'OLD HABITS NEVER TRULY DIE OUT, ' }, { t: 'd o n t   t h e y?', c: 'red' }]
   ]},
-  { names: ['ashlyn', 'lyn'], lines: [
+  { names: ['ashlyn', 'lyn'], addedIn: '0.2', lines: [
     [{ t: "you aren't welc o m  e      h e       r    e", c: 'red' }]
   ]},
-  { names: ['zender', 'zenderman'], lines: [
+  { names: ['zender', 'zenderman'], addedIn: '0.2', setClientFlag: 'seenZender', lineDelayMs: 1600, lines: [
     [{ t: "God damnit, don't go DDoSing my server again, Zender!", c: 'grey' }],
     [{ t: 'Uhh, but these packets are harmless!', c: 'purple' }],
     [{ t: "Ugh…WAIT! IT'S GONNA-", c: 'grey' }]
@@ -91,10 +96,11 @@ const NAME_TABLE = [
   ]}
 ];
 
-function allNamesAlphabetical() {
-  const all = [];
-  NAME_TABLE.forEach(entry => entry.names.forEach(n => all.push(n)));
-  return all.sort((a, b) => a.localeCompare(b));
+function allEntriesFiltered(version) {
+  const entries = version ? NAME_TABLE.filter(e => e.addedIn === version) : NAME_TABLE;
+  const names = [];
+  entries.forEach(entry => entry.names.forEach(n => names.push(n)));
+  return names.sort((a, b) => a.localeCompare(b));
 }
 
 exports.handler = async (event) => {
@@ -116,7 +122,7 @@ exports.handler = async (event) => {
   const ownerKey = (body.ownerKey || '').toString();
   const isOwner = ownerKey ? sha256Hex(ownerKey) === OWNER_UNLOCK_HASH : false;
 
-  // owner-only: list every known name, alphabetized
+  // owner-only: list known names, optionally filtered to one version, with a total
   if (body.listNames) {
     if (!isOwner) {
       return {
@@ -125,14 +131,18 @@ exports.handler = async (event) => {
         body: JSON.stringify({ found: false })
       };
     }
+    const version = body.version ? body.version.toString() : null;
+    const names = allEntriesFiltered(version);
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ found: true, names: allNamesAlphabetical() })
+      body: JSON.stringify({ found: true, names, total: names.length, version })
     };
   }
 
   const name = (body.name || '').toString().trim().toLowerCase();
+  const clientFlags = Array.isArray(body.flags) ? body.flags : [];
+
   const match = NAME_TABLE.find(entry => entry.names.includes(name));
 
   if (!match) {
@@ -151,14 +161,24 @@ exports.handler = async (event) => {
     };
   }
 
+  if (match.requiresFlag && !clientFlags.includes(match.requiresFlag)) {
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ found: false })
+    };
+  }
+
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       found: true,
       lines: match.lines,
+      lineDelayMs: match.lineDelayMs || 0,
       actions: match.actions || [],
-      setSessionCookie: !!match.setSessionCookie
+      setSessionCookie: !!match.setSessionCookie,
+      setClientFlag: match.setClientFlag || null
     })
   };
 };
