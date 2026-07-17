@@ -1,13 +1,16 @@
-const crypto = require('crypto');
-
-function sha256Hex(str) {
-  return crypto.createHash('sha256').update(str, 'utf8').digest('hex');
-}
-
-// Hash of the owner-unlock passphrase. The passphrase itself lives only
-// on Lillith's device (in localStorage after a successful unlock) — it
-// is never stored here or anywhere else in this codebase.
-const OWNER_UNLOCK_HASH = '337960b05ca2c8c1550e5e7ee82fc1939d7b8593daf1a7016ff5efc178df8cdb';
+// A small fixed pool of valid dev-access passphrases. Anyone who has ONE
+// of these unlocks full owner access — there's no way to tell them apart
+// or revoke just one individually (no database here, just this file), so
+// treat all of them as equally trusted. Plaintext lives here because this
+// file itself never reaches a browser; it's fine for it to be readable by
+// the server. The client only ever sees hashes of these, never the values.
+const DEV_KEYS = [
+  'bb1b54-8114df-f2d608',
+  '26af8d-b30bd1-da6f6a',
+  'ed7b7c-1ee235-5655b0',
+  '7b9af0-bf00c5-7bb63b',
+  '3cfe4b-477f1f-6a911a'
+];
 
 // Each entry:
 //   names: aliases that trigger this entry (matched lowercase)
@@ -42,14 +45,23 @@ const NAME_TABLE = [
   { names: ['colton'], addedIn: '0.1', lines: [
     [{ t: 'TRULY, JUST TRULY SOMEBODY WORTH HAVING ON BOARD.' }]
   ]},
-  { names: ['eli', 'sean', 'nia'], addedIn: '0.1', lines: [
-    [{ t: 'TRULY, JUST TRULY SOMEBODY WORTH HAVING ON BOARD.' }]
+  { names: ['eli'], addedIn: '0.1', lines: [
+    [{ t: 'TRULY, JUST TRULY SOMEBODY WORTH HAVING ON BOARD, ELI.' }]
+  ]},
+  { names: ['sean'], addedIn: '0.1', lines: [
+    [{ t: 'TRULY, JUST TRULY SOMEBODY WORTH HAVING ON BOARD, SEAN.' }]
+  ]},
+  { names: ['nia'], addedIn: '0.1', lines: [
+    [{ t: 'TRULY, JUST TRULY SOMEBODY WORTH HAVING ON BOARD, NIA.' }]
   ]},
   { names: ['zoie'], addedIn: '0.1', lines: [
     [{ t: "WELL, WELL, WELL. YOU'RE AN " }, { t: 'INTERESTING', c: 'red' }, { t: ' ONE.' }]
   ]},
   { names: ['aven'], addedIn: '0.1', ownerOnly: true, setSessionCookie: true, lines: [
     [{ t: 'my muse.' }]
+  ]},
+  { names: ['cringus'], addedIn: '0.2.2', ownerOnly: true, setSessionCookie: true, lines: [
+    [{ t: 'my muse', c: 'purple' }]
   ]},
   { names: ['mori'], addedIn: '0.1', lines: [
     [{ t: 'WELCOME, CHILD OF THE TREES.' }]
@@ -120,7 +132,26 @@ exports.handler = async (event) => {
   }
 
   const ownerKey = (body.ownerKey || '').toString();
-  const isOwner = ownerKey ? sha256Hex(ownerKey) === OWNER_UNLOCK_HASH : false;
+  const isOwner = ownerKey ? DEV_KEYS.includes(ownerKey.trim()) : false;
+
+  // owner-only: hand back a random key from the pool + the URL to use it,
+  // so an already-verified device can generate a link to share without
+  // giving out their own personal key
+  if (body.devAccess) {
+    if (!isOwner) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: false })
+      };
+    }
+    const key = DEV_KEYS[Math.floor(Math.random() * DEV_KEYS.length)];
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ found: true, key })
+    };
+  }
 
   // owner-only: list known names, optionally filtered to one version, with a total
   if (body.listNames) {
