@@ -303,7 +303,13 @@
   // fake this — the real check happens server-side now.
   // ---------------------------------------------------------------
 
-  const OWNER_UNLOCK_HASH = '337960b05ca2c8c1550e5e7ee82fc1939d7b8593daf1a7016ff5efc178df8cdb';
+  const OWNER_UNLOCK_HASHES = [
+    '337960b05ca2c8c1550e5e7ee82fc1939d7b8593daf1a7016ff5efc178df8cdb',
+    '1075c4ebf4d10f01dc552aa18adeb26640e319075a88cecf675d26824a00aa4f',
+    '57d56bd99adbd587003193184901f2c0670b49f4fbc385acf95452d45c9d0ce3',
+    'd54e8c82000af2a5f57fbb53204fae37a144a7c1b70d814e45b03dad4390f168',
+    '525fbbc98c077b24182e8153db697d370fca46af55f4d8403715e9940ccbe338'
+  ];
 
   function isOwnerVerified(){
     return localStorage.getItem('swirl_owner') === '1';
@@ -315,7 +321,7 @@
     if(!attempt) return;
 
     const hash = await sha256Hex(attempt.trim());
-    if(hash === OWNER_UNLOCK_HASH){
+    if(OWNER_UNLOCK_HASHES.includes(hash)){
       localStorage.setItem('swirl_owner', '1');
       localStorage.setItem('swirl_owner_key', attempt.trim());
     }
@@ -345,6 +351,18 @@
     }
   }
 
+  // browsers only allow scripts to close tabs THEY opened via window.open() —
+  // a normal tab (typed URL, bookmark, link) almost always blocks window.close()
+  // silently, no error thrown, nothing visibly happens. that's a hard browser
+  // security rule, not something fixable in page code. so: attempt the real
+  // close, and if we're still here a moment later, fall back to wiping the
+  // page to blank — not a true tab close, but it reads as "gone" either way.
+  async function attemptCloseTab(){
+    try{ window.close(); } catch(e){}
+    await sleep(250);
+    try{ window.location.href = 'about:blank'; } catch(e){}
+  }
+
   // runs the optional action list attached to a name response, in order
   async function runResponseActions(actions){
     for(const a of (actions || [])){
@@ -353,11 +371,7 @@
       } else if(a.type === 'setPurpleFlag'){
         localStorage.setItem('purpleModeTrigger', String(a.ms || 30000));
       } else if(a.type === 'closeTab'){
-        // note: browsers generally only allow scripts to close tabs
-        // they themselves opened via window.open(). on a normal tab
-        // (typed URL, bookmark, etc.) this call is often silently
-        // blocked — that's a browser restriction, not a bug here.
-        try{ window.close(); } catch(e){}
+        await attemptCloseTab();
       }
     }
   }
@@ -476,7 +490,7 @@
   // boot banner / boot sequence
   // ---------------------------------------------------------------
 
-  const BUILD_VERSION = '0.2.1';
+  const BUILD_VERSION = '0.2.3';
 
   function bannerBeats(){
     return [
@@ -562,6 +576,7 @@
     '  listname          - list all names + total',
     '  listname -<ver>   - list names from a version',
     '  newnames          - list names added this version',
+    '  devaccess         - generate a dev-unlock link',
     '  help              - show this list'
   ];
 
@@ -590,7 +605,7 @@
     consoleEl.classList.add('shake-hard');
     await sleep(500);
 
-    try{ window.close(); } catch(e){}
+    await attemptCloseTab();
   }
 
   // shared by 'listname' (optional version arg) and 'newnames' (current version)
@@ -709,6 +724,26 @@
 
     if(val === 'newnames' && isOwnerVerified()){
       fetchNameList(BUILD_VERSION);
+      return;
+    }
+
+    if(val === 'devaccess' && isOwnerVerified()){
+      fetch('/.netlify/functions/checkname', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ devAccess: true, ownerKey: localStorage.getItem('swirl_owner_key') || '' })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(!data.found){
+            addLine('unable to verify owner key.', { amber: true });
+            return;
+          }
+          const url = location.origin + location.pathname + '?unlock=' + data.key;
+          addLine(url, { accent: true });
+          addLine('');
+        })
+        .catch(() => addLine('devaccess unavailable right now.', { amber: true }));
       return;
     }
 
@@ -833,4 +868,3 @@
 
 </body>
 </html>
-
