@@ -262,6 +262,23 @@
     }
   }
 
+  // names tried in THIS browser session only — sessionStorage, so it
+  // survives a refresh but clears when the tab actually closes. this is
+  // separate from the server-side whoseen log (which is cross-visitor
+  // and owner-only); this one just shows you your own recent attempts.
+  function logSessionHistory(name){
+    try{
+      const hist = JSON.parse(sessionStorage.getItem('swirl_history') || '[]');
+      hist.push({ name: name || '(blank)', at: new Date().toISOString() });
+      sessionStorage.setItem('swirl_history', JSON.stringify(hist));
+    } catch(e){}
+  }
+
+  function getSessionHistory(){
+    try{ return JSON.parse(sessionStorage.getItem('swirl_history') || '[]'); }
+    catch(e){ return []; }
+  }
+
   async function findSpecial(raw){
     const n = raw.trim().toLowerCase();
     if(!n) return null;
@@ -315,15 +332,22 @@
     return localStorage.getItem('swirl_owner') === '1';
   }
 
+  function ownerRole(){
+    if(!isOwnerVerified()) return 'visitor';
+    return localStorage.getItem('swirl_owner_role') || 'dev';
+  }
+
   async function checkOwnerUnlock(){
     const params = new URLSearchParams(location.search);
     const attempt = params.get('unlock');
     if(!attempt) return;
 
     const hash = await sha256Hex(attempt.trim());
-    if(OWNER_UNLOCK_HASHES.includes(hash)){
+    const hashIndex = OWNER_UNLOCK_HASHES.indexOf(hash);
+    if(hashIndex !== -1){
       localStorage.setItem('swirl_owner', '1');
       localStorage.setItem('swirl_owner_key', attempt.trim());
+      localStorage.setItem('swirl_owner_role', hashIndex === 0 ? 'owner' : 'dev');
     }
 
     // strip the query param either way so it doesn't sit in the address bar/history
@@ -477,8 +501,13 @@
     scrollDown();
   }
 
+  let idleGlitchIntervalId = null;
+
   function startIdleGlitchWatcher(){
-    setInterval(async () => {
+    if(idleGlitchIntervalId !== null){
+      clearInterval(idleGlitchIntervalId);
+    }
+    idleGlitchIntervalId = setInterval(async () => {
       if(!menuShown) return;
       if(document.activeElement === cmdField && cmdField.value.trim() !== '') return;
       if(Math.random() > 0.08) return; // ~8% chance per check
@@ -490,14 +519,37 @@
   // boot banner / boot sequence
   // ---------------------------------------------------------------
 
-  const BUILD_VERSION = '0.2.3';
+  const BUILD_VERSION = '0.2.4';
+
+  // fetched once at boot, cached for both the banner line and 'uptime'.
+  // null if the fetch fails (e.g. local testing without the live function).
+  let cachedSiteStats = null;
+
+  async function fetchSiteStats(){
+    try{
+      const res = await fetch('/.netlify/functions/checkname', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ siteStats: true })
+      });
+      const data = await res.json();
+      if(!data.found) return null;
+      return { count: data.count, launch: data.launch };
+    } catch(e){
+      return null;
+    }
+  }
 
   function bannerBeats(){
-    return [
+    const beats = [
       { lines: [{ text: '3STARSWIRL TERMINAL', accent: true }], holdMs: 260 },
-      { lines: [{ text: 'local logging system // build ' + BUILD_VERSION, dim: true }], holdMs: 260 },
-      { lines: [{ text: '' }], holdMs: 120 }
+      { lines: [{ text: 'local logging system // build ' + BUILD_VERSION, dim: true }], holdMs: 260 }
     ];
+    if(cachedSiteStats){
+      beats.push({ lines: [{ text: 'visitors: ' + cachedSiteStats.count.toLocaleString(), dim: true }], holdMs: 200 });
+    }
+    beats.push({ lines: [{ text: '' }], holdMs: 120 });
+    return beats;
   }
 
   function bootBeats(displayName){
@@ -567,7 +619,20 @@
     '3starswirl@gmail.com'
   ];
 
-  const HELP_LINES = [
+  const PUBLIC_HELP_LINES = [
+    'commands:',
+    '  uptime            - how long the site has been up',
+    '  history           - names you\'ve tried this session',
+    '  whoami            - your current name + access level',
+    '  time              - current date/time',
+    '  banner            - reprint the boot banner',
+    '  echo <text>       - repeats back whatever you type',
+    '  clear / cls       - clear the screen',
+    '  help              - show this list'
+  ];
+
+  const OWNER_HELP_LINES = [
+    '',
     'owner commands:',
     '  rename            - test names again',
     '  glitch1           - replay intro glitch',
@@ -577,7 +642,7 @@
     '  listname -<ver>   - list names from a version',
     '  newnames          - list names added this version',
     '  devaccess         - generate a dev-unlock link',
-    '  help              - show this list'
+    '  whoseen           - last-seen visitor log'
   ];
 
   // vanishingly rare: selecting a menu option by number or click can,
@@ -640,6 +705,51 @@
         ]);
       })
       .catch(() => addLine('name list unavailable right now.', { amber: true }));
+  }
+
+  // public command — no owner gate. a handful of the coldest lines
+  // also close the tab afterward, via the same shared close-attempt
+  // helper the name-scripted events use.
+  const COWSAY_PHRASES = [
+    { t: 'oh fuck off', close: true },
+    { t: "oh, it's you again" },
+    { t: 'yeah, fuck no' },
+    { t: 'hard pass' },
+    { t: "couldn't give a shit, but go off" },
+    { t: 'not this shit again', close: true },
+    { t: 'absolutely not, try again' },
+    { t: 'hearing you type is agonizing' },
+    { t: 'wow. groundbreaking. shut up.' },
+    { t: 'did you think that was clever?' },
+    { t: 'bless your heart, dumbass' },
+    { t: 'adorable. still wrong though' },
+    { t: 'ah yes. riveting. no.' },
+    { t: "i've seen smarter rocks" },
+    { t: 'mediocrity suits you' },
+    { t: 'this is embarrassing for both of us' },
+    { t: "please, for god's sake, stop", close: true },
+    { t: 'genuinely, why' },
+    { t: 'cool story' },
+    { t: 'noted. ignored.' },
+    { t: 'and? nobody asked', close: true },
+    { t: "fascinating. don't care." },
+    { t: 'sure thing, buddy' }
+  ];
+
+  function renderCowsay(text){
+    const border = '_'.repeat(text.length + 2);
+    const dashes = '-'.repeat(text.length + 2);
+    return ` ${border}\n< ${text} >\n ${dashes}\n        \\   ^__^\n         \\  (oo)\\_______\n            (__)\\       )\\/\\\n                ||----w |\n                ||     ||`;
+  }
+
+  async function runCowsay(){
+    const pick = COWSAY_PHRASES[Math.floor(Math.random() * COWSAY_PHRASES.length)];
+    addLine(renderCowsay(pick.t));
+    addLine('');
+    if(pick.close){
+      await sleep(900);
+      await attemptCloseTab();
+    }
   }
 
   function runCommand(raw, isNumericTrigger){
@@ -707,9 +817,12 @@
       return;
     }
 
-    if(val === 'help' && isOwnerVerified()){
+    if(val === 'help'){
+      const lines = isOwnerVerified()
+        ? PUBLIC_HELP_LINES.concat(OWNER_HELP_LINES)
+        : PUBLIC_HELP_LINES;
       printBeats([
-        { lines: HELP_LINES.map(t => ({ text: t, dim: true })), holdMs: 0 },
+        { lines: lines.map(t => ({ text: t, dim: true })), holdMs: 0 },
         { lines: [{ text: '' }], holdMs: 0 }
       ]);
       return;
@@ -747,6 +860,91 @@
       return;
     }
 
+    if(val === 'whoseen' && isOwnerVerified()){
+      fetch('/.netlify/functions/checkname', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ whoSeen: true, ownerKey: localStorage.getItem('swirl_owner_key') || '' })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if(!data.found){
+            addLine('unable to verify owner key.', { amber: true });
+            return;
+          }
+          if(!data.visitors.length){
+            addLine('no visitors logged yet.', { dim: true });
+            return;
+          }
+          const rows = data.visitors.map(v => {
+            const roleTag = '[' + v.role + ']';
+            return `  ${roleTag.padEnd(9,' ')} ${v.ip}  "${v.lastName}"  last seen ${v.lastSeen}  (${v.visitCount}x)`;
+          });
+          printBeats([
+            { lines: [{ text: 'visitor log (most recent first):', dim: true }], holdMs: 0 },
+            { lines: rows.map(r => ({ text: r, dim: true })), holdMs: 0 },
+            { lines: [{ text: '' }], holdMs: 0 }
+          ]);
+        })
+        .catch(() => addLine('whoseen unavailable right now.', { amber: true }));
+      return;
+    }
+
+    if(val === 'cowsay'){
+      runCowsay();
+      return;
+    }
+
+    if(val === 'uptime'){
+      if(!cachedSiteStats || !cachedSiteStats.launch){
+        addLine('uptime unavailable right now.', { dim: true });
+        return;
+      }
+      const ms = Date.now() - new Date(cachedSiteStats.launch).getTime();
+      const days = Math.floor(ms / 86400000);
+      const hours = Math.floor((ms % 86400000) / 3600000);
+      const mins = Math.floor((ms % 3600000) / 60000);
+      addLine(`up ${days}d ${hours}h ${mins}m`, { dim: true });
+      return;
+    }
+
+    if(val === 'history'){
+      const hist = getSessionHistory();
+      if(!hist.length){
+        addLine('no history this session yet.', { dim: true });
+        return;
+      }
+      const rows = hist.map((h, i) => `  ${i + 1}. ${h.name}`);
+      printBeats([
+        { lines: [{ text: 'names tried this session:', dim: true }], holdMs: 0 },
+        { lines: rows.map(r => ({ text: r, dim: true })), holdMs: 0 },
+        { lines: [{ text: '' }], holdMs: 0 }
+      ]);
+      return;
+    }
+
+    if(val === 'whoami'){
+      const who = currentSessionName || '(no name entered yet)';
+      addLine(`${who}  [${ownerRole()}]`, { dim: true });
+      return;
+    }
+
+    if(val === 'time'){
+      addLine(new Date().toString(), { dim: true });
+      return;
+    }
+
+    if(val === 'banner'){
+      printBeats(bannerBeats());
+      return;
+    }
+
+    if(val === 'echo' || val.startsWith('echo ')){
+      const text = raw.trim().slice(4).trim();
+      addLine(text || '(nothing to echo)', {});
+      return;
+    }
+
     const match = MENU_ITEMS.find(m => m.key === val || m.word === val);
     if(match && match.href){
       addLine(`opening ${match.label}...`, { dim: true });
@@ -764,6 +962,8 @@
   // ---------------------------------------------------------------
 
   async function runNamePromptFlow(withDarkIntroChance){
+    menuShown = false;
+
     if(withDarkIntroChance){
       const forced = sessionStorage.getItem('forceDarkIntro') === '1';
       if(forced) sessionStorage.removeItem('forceDarkIntro');
@@ -779,6 +979,7 @@
   async function begin(){
     checkPurpleMode();
     await checkOwnerUnlock();
+    cachedSiteStats = await fetchSiteStats();
     await runNamePromptFlow(true);
   }
 
@@ -801,9 +1002,14 @@
     };
   }
 
+  let currentSessionName = null;
+
   async function handleNameSubmit(raw){
     const value = raw.trim();
     if(!value){ showNamePrompt(); return; }
+
+    logSessionHistory(value);
+    currentSessionName = value;
 
     const result = await findSpecial(value);
     const hasLines = result && result.lines && result.lines.length;
