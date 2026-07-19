@@ -1,3 +1,5 @@
+const { getStore } = require('@netlify/blobs');
+
 // A small fixed pool of valid dev-access passphrases. Anyone who has ONE
 // of these unlocks full owner access — there's no way to tell them apart
 // or revoke just one individually (no database here, just this file), so
@@ -11,6 +13,96 @@ const DEV_KEYS = [
   '7b9af0-bf00c5-7bb63b',
   '3cfe4b-477f1f-6a911a'
 ];
+
+// the very first key is treated as Lillith's own personal one, for
+// labeling purposes in the visitor log (owner vs. dev vs. visitor)
+const OWNER_PERSONAL_KEY = DEV_KEYS[0];
+
+// devaccess only ever hands out from this subset — excludes the first
+// (original/personal) key so it can never accidentally get handed to
+// someone else while thinking it's a fresh generated one
+const SHAREABLE_DEV_KEYS = DEV_KEYS.slice(1);
+
+function roleForKey(ownerKey) {
+  if (ownerKey === OWNER_PERSONAL_KEY) return 'owner';
+  if (DEV_KEYS.includes(ownerKey)) return 'dev';
+  return 'visitor';
+}
+
+function getClientIp(event) {
+  return (
+    event.headers['x-nf-client-connection-ip'] ||
+    (event.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
+    'unknown'
+  );
+}
+
+// logs/updates a per-IP record every time someone submits a name at the
+// terminal — recognized or not. this is the only place visitor data is
+// written; it never touches the devaccess/listNames tools.
+async function logVisitor(ip, name, role) {
+  try {
+    const store = getStore('visitors');
+    await ensureLaunchMeta(store);
+    const key = 'visitor:' + ip;
+    const now = new Date().toISOString();
+
+    let record = await store.get(key, { type: 'json' });
+    if (!record) {
+      record = { ip, firstSeen: now, visitCount: 0, role };
+    }
+
+    record.lastSeen = now;
+    record.lastName = name || '(blank)';
+    record.visitCount = (record.visitCount || 0) + 1;
+
+    // once elevated, stays elevated in the log even if a later visit
+    // from the same IP doesn't include a key (e.g. someone else on
+    // the same network, or just not re-entering it)
+    const rank = { visitor: 0, dev: 1, owner: 2 };
+    if (rank[role] > rank[record.role || 'visitor']) {
+      record.role = role;
+    }
+
+    await store.setJSON(key, record);
+  } catch (e) {
+    // storage hiccup shouldn't ever break the actual name-check response
+  }
+}
+
+// sets a one-time "site launch" timestamp on the very first visitor
+// ever logged. cheap to read later — avoids scanning every record
+// just to answer "how long has this site been up".
+async function ensureLaunchMeta(store) {
+  try {
+    const existing = await store.get('meta:launch', { type: 'text' });
+    if (!existing) {
+      await store.set('meta:launch', new Date().toISOString());
+    }
+  } catch (e) {
+    // non-critical
+  }
+}
+
+// public, lightweight: just a count + launch date, no IPs or names.
+// used for the boot-banner visitor count and the 'uptime' command.
+async function siteStats() {
+  const store = getStore('visitors');
+  const launch = (await store.get('meta:launch', { type: 'text' })) || null;
+  const { blobs } = await store.list({ prefix: 'visitor:' });
+  return { count: blobs.length, launch };
+}
+
+async function allVisitors() {
+  const store = getStore('visitors');
+  const { blobs } = await store.list({ prefix: 'visitor:' });
+  const records = await Promise.all(
+    blobs.map(b => store.get(b.key, { type: 'json' }))
+  );
+  return records
+    .filter(Boolean)
+    .sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen));
+}
 
 // Each entry:
 //   names: aliases that trigger this entry (matched lowercase)
@@ -131,8 +223,36 @@ exports.handler = async (event) => {
     };
   }
 
-  const ownerKey = (body.ownerKey || '').toString();
-  const isOwner = ownerKey ? DEV_KEYS.includes(ownerKey.trim()) : false;
+  const ownerKey = (body.ownerKey || '').toString().trim();
+  const role = roleForKey(ownerKey);
+  const isOwner = role !== 'visitor';
+
+  // public — no owner check. just a count + launch date, safe for anyone.
+  if (body.siteStats) {
+    const stats = await siteStats();
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ found: true, count: stats.count, launch: stats.launch })
+    };
+  }
+
+  // owner-only: the last-seen visitor log
+  if (body.whoSeen) {
+    if (!isOwner) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: false })
+      };
+    }
+    const visitors = await allVisitors();
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ found: true, visitors })
+    };
+  }
 
   // owner-only: hand back a random key from the pool + the URL to use it,
   // so an already-verified device can generate a link to share without
@@ -145,7 +265,7 @@ exports.handler = async (event) => {
         body: JSON.stringify({ found: false })
       };
     }
-    const key = DEV_KEYS[Math.floor(Math.random() * DEV_KEYS.length)];
+    const key = SHAREABLE_DEV_KEYS[Math.floor(Math.random() * SHAREABLE_DEV_KEYS.length)];
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -173,6 +293,8 @@ exports.handler = async (event) => {
 
   const name = (body.name || '').toString().trim().toLowerCase();
   const clientFlags = Array.isArray(body.flags) ? body.flags : [];
+
+  await logVisitor(getClientIp(event), name, role);
 
   const match = NAME_TABLE.find(entry => entry.names.includes(name));
 
