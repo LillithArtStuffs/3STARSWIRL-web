@@ -15,6 +15,39 @@ function visitorStore() {
   });
 }
 
+// live broadcast system — a single stored announcement made of multiple
+// lines, each with its own color. Each `announce` call APPENDS a new
+// line (not a replace), and each line gets its own id (a timestamp) so
+// clients can tell exactly which lines they haven't shown yet.
+const VALID_ANNOUNCE_COLORS = ['amber', 'red', 'grey', 'purple', 'accent'];
+
+async function getAnnouncement() {
+  const store = visitorStore();
+  const raw = await store.get('meta:announcement', { type: 'json' });
+  return raw || { active: false, lines: [] };
+}
+
+async function appendAnnouncementLine(text, color) {
+  const store = visitorStore();
+  const existing = await store.get('meta:announcement', { type: 'json' });
+  const lines = (existing && Array.isArray(existing.lines)) ? existing.lines : [];
+
+  lines.push({
+    text,
+    color: VALID_ANNOUNCE_COLORS.includes(color) ? color : 'amber',
+    id: Date.now()
+  });
+
+  const record = { active: true, lines };
+  await store.setJSON('meta:announcement', record);
+  return record;
+}
+
+async function clearAnnouncement() {
+  const store = visitorStore();
+  await store.setJSON('meta:announcement', { active: false, lines: [] });
+}
+
 // A small fixed pool of valid dev-access passphrases. Anyone who has ONE
 // of these unlocks full owner access — there's no way to tell them apart
 // or revoke just one individually (no database here, just this file), so
@@ -180,7 +213,7 @@ const NAME_TABLE = [
   // --- 0.2 batch ---
 
   { names: ['marcy'], addedIn: '0.2', lines: [
-    [{ t: "THAT ISN'T YOUR TRUE NAME IS IT, " }, { t: 'MARCELINE?', c: 'red' }]
+    [{ t: "THAT ISN'T YOUR TRUE NAME IS IT, " }, { t: 'FINN?', c: 'red' }]
   ]},
   { names: ['finn'], addedIn: '0.2', lines: [
     [{ t: 'I APPRECIATE YOUR HONESTY. PROCEED.' }]
@@ -249,6 +282,49 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ found: true, count: stats.count, launch: stats.launch })
+    };
+  }
+
+  // public — no owner check. anyone in the terminal can receive a broadcast.
+  if (body.getAnnouncement) {
+    const ann = await getAnnouncement();
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ann)
+    };
+  }
+
+  // owner-only: post or clear the live broadcast
+  if (body.setAnnouncement) {
+    if (!isOwner) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: false })
+      };
+    }
+    if (body.clear) {
+      await clearAnnouncement();
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: true, cleared: true })
+      };
+    }
+    const text = (body.text || '').toString().trim();
+    if (!text) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: false, error: 'empty text' })
+      };
+    }
+    const record = await appendAnnouncementLine(text, (body.color || '').toString().trim());
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ found: true, announcement: record })
     };
   }
 
@@ -351,3 +427,24 @@ exports.handler = async (event) => {
   };
 };
 
+/**
+ * BLOBS SETUP (one-time)
+ * -----------------------
+ * 1. Get your Site ID:
+ *    Netlify dashboard > this site > Site configuration > General >
+ *    Site details > "Site ID" (a long UUID-looking string). Copy it.
+ *
+ * 2. Create a Personal Access Token:
+ *    Click your account avatar (top right) > User settings >
+ *    Applications > Personal access tokens > "New access token".
+ *    Give it any name, copy the token immediately (shown only once).
+ *
+ * 3. Add both as environment variables on THIS SITE (not your account):
+ *    This site > Site configuration > Environment variables > "Add a variable"
+ *      NETLIFY_BLOBS_SITE_ID = (the Site ID from step 1)
+ *      NETLIFY_BLOBS_TOKEN   = (the token from step 2)
+ *
+ * 4. Trigger a new deploy (Deploys > Trigger deploy > Deploy site) so the
+ *    function picks up the new environment variables — existing deploys
+ *    won't see them until it redeploys.
+ */
