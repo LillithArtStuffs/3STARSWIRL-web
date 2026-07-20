@@ -362,14 +362,15 @@
       localStorage.setItem('swirl_owner_role', hashIndex === 0 ? 'owner' : 'dev');
     }
 
-    // on the dev subdomain, deliberately DON'T strip the param — a
-    // Home Screen bookmark saves its URL exactly as-is with no address
-    // bar to edit later, so keeping ?unlock= baked into that one saved
-    // URL lets it re-authenticate itself on every launch, with zero
-    // reliance on iOS sharing storage between Safari and the home-screen
-    // app (which it sometimes doesn't). Everywhere else, still stripped
-    // so it doesn't linger in normal browsing history.
-    if(location.hostname.startsWith('dev.')) return;
+    // home-screen/standalone apps have no address bar to see this in,
+    // and iOS doesn't reliably share storage between Safari and a
+    // launched home-screen app — so a bookmark needs ?unlock= baked
+    // into its saved URL to keep re-authenticating on every launch.
+    // Only skip the strip in that specific case; normal browser tabs
+    // still get it cleaned out of the address bar/history as before.
+    const isStandalone = window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+    if(isStandalone) return;
 
     params.delete('unlock');
     const clean = location.pathname + (params.toString() ? '?' + params.toString() : '');
@@ -1015,15 +1016,6 @@
   async function begin(){
     checkPurpleMode();
     await checkOwnerUnlock();
-
-    const isDevFastPath = location.hostname.startsWith('dev.') && isOwnerVerified();
-
-    if(isDevFastPath){
-      fetchSiteStats().then(s => { cachedSiteStats = s; }); // non-blocking, don't hold up the picker
-      showDevQuickPicker();
-      return;
-    }
-
     cachedSiteStats = await fetchSiteStats();
     await runNamePromptFlow(true);
   }
@@ -1074,27 +1066,6 @@
         scrollDown();
       }
     };
-  }
-
-  // dev-subdomain fast path: if this browser already has a valid key,
-  // skip name typing and the whole boot-lag prompt entirely — one
-  // keypress straight into a working terminal. Never appears for
-  // unverified visitors, even on this subdomain.
-  function showDevQuickPicker(){
-    linesEl.innerHTML = '';
-    addLine('quick access:', { dim: true });
-    addLine('[a] aven   [c] colt', { accent: true });
-    inputRow.style.display = 'none';
-
-    function handler(e){
-      const k = e.key.toLowerCase();
-      if(k !== 'a' && k !== 'c') return;
-      document.removeEventListener('keydown', handler);
-      const name = k === 'a' ? 'aven' : 'colt';
-      addLine('> ' + name, { dim: true });
-      enterTerminal(name);
-    }
-    document.addEventListener('keydown', handler);
   }
 
   async function handleNameSubmit(raw){
