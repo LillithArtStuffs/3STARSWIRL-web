@@ -81,6 +81,7 @@
   .line.amber{ color: var(--amber); }
   .line.accent{ color: var(--accent); }
   .line.red{ color: var(--red); }
+  .line.purple{ color: var(--purple); }
 
   .seg-amber{ color: var(--amber); }
   .seg-red{ color: var(--red); }
@@ -449,11 +450,21 @@
       (opts && opts.amber ? ' amber' : '') +
       (opts && opts.dim ? ' dim' : '') +
       (opts && opts.accent ? ' accent' : '') +
-      (opts && opts.red ? ' red' : '');
+      (opts && opts.red ? ' red' : '') +
+      (opts && opts.purple ? ' purple' : '');
     el.textContent = text;
     linesEl.appendChild(el);
     scrollDown();
     return el;
+  }
+
+  // maps a broadcast color name to the right addLine opts key
+  function colorOpts(name){
+    if(name === 'grey') return { dim: true };
+    if(name === 'purple') return { purple: true };
+    if(name === 'red') return { red: true };
+    if(name === 'accent') return { accent: true };
+    return { amber: true };
   }
 
   function printBeat(lines, holdMs){
@@ -543,11 +554,57 @@
     }, 42000);
   }
 
+  // live broadcast system — polls for new lines while someone is
+  // actually sitting in the terminal, and breaks in live if any show up
+  // mid-session. lastSeenLineId is per-page-load (not persisted), so a
+  // fresh visit always shows every currently-active line once.
+  let lastSeenLineId = 0;
+  let broadcastIntervalId = null;
+
+  async function fetchAnnouncement(){
+    try{
+      const res = await fetch('/.netlify/functions/checkname', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ getAnnouncement: true })
+      });
+      return await res.json();
+    } catch(e){
+      return { active: false, lines: [] };
+    }
+  }
+
+  // prints only the given lines (already filtered to "new" by the caller),
+  // each in its own color, framed with one shared header
+  function printBroadcastLines(lines){
+    if(!lines.length) return;
+    addLine('', {});
+    addLine('[[ BROADCAST ]]', { accent: true });
+    lines.forEach(line => addLine(line.text, colorOpts(line.color)));
+    addLine('', {});
+    scrollDown();
+  }
+
+  function startBroadcastWatcher(){
+    if(broadcastIntervalId !== null){
+      clearInterval(broadcastIntervalId);
+    }
+    broadcastIntervalId = setInterval(async () => {
+      if(!menuShown) return;
+      const ann = await fetchAnnouncement();
+      if(!ann.active || !ann.lines || !ann.lines.length) return;
+      const newLines = ann.lines.filter(l => l.id > lastSeenLineId);
+      if(!newLines.length) return;
+      lastSeenLineId = Math.max(...ann.lines.map(l => l.id));
+      printBroadcastLines(newLines);
+    }, 15000);
+  }
+
   // ---------------------------------------------------------------
   // boot banner / boot sequence
   // ---------------------------------------------------------------
 
-  const BUILD_VERSION = '0.2.4';
+  const BUILD_VERSION = '0.2.5';
 
   // fetched once at boot, cached for both the banner line and 'uptime'.
   // null if the fetch fails (e.g. local testing without the live function).
@@ -663,6 +720,10 @@
     '',
     'owner commands:',
     '  debug             - show your local owner state',
+    '  annc <text>       - append a line to the live broadcast',
+    '  annc <color> <text> - amber/red/grey/purple/accent',
+    '  annc clear        - end the current broadcast',
+    '  (announce works too, annc is just shorter)',
     '  rename            - test names again',
     '  glitch1           - replay intro glitch',
     '  glitch2           - fire idle glitch now',
@@ -889,6 +950,50 @@
       return;
     }
 
+    const announceMatch = val === 'announce' || val.startsWith('announce ') || val === 'annc' || val.startsWith('annc ');
+    if(announceMatch && isOwnerVerified()){
+      const prefixLen = val.startsWith('announce') ? 'announce'.length : 'annc'.length;
+      const rest = raw.trim().slice(prefixLen).trim();
+
+      if(rest.toLowerCase() === 'clear'){
+        fetch('/.netlify/functions/checkname', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ setAnnouncement: true, clear: true, ownerKey: localStorage.getItem('swirl_owner_key') || '' })
+        })
+          .then(res => res.json())
+          .then(data => addLine(data.found ? 'broadcast cleared.' : 'unable to verify owner key.', { dim: true }))
+          .catch(() => addLine('announce unavailable right now.', { amber: true }));
+        return;
+      }
+
+      const ANNOUNCE_COLORS = ['amber', 'red', 'grey', 'purple', 'accent'];
+      const firstWord = rest.split(' ')[0].toLowerCase();
+      let color = 'amber';
+      let text = rest;
+      if(ANNOUNCE_COLORS.includes(firstWord)){
+        color = firstWord;
+        text = rest.slice(firstWord.length).trim();
+      }
+
+      if(!text){
+        addLine('usage: annc <text>  or  annc <color> <text>  or  annc clear', { dim: true });
+        addLine('colors: amber, red, grey, purple, accent', { dim: true });
+        addLine('each call appends a new line to the current broadcast.', { dim: true });
+        return;
+      }
+
+      fetch('/.netlify/functions/checkname', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ setAnnouncement: true, text, color, ownerKey: localStorage.getItem('swirl_owner_key') || '' })
+      })
+        .then(res => res.json())
+        .then(data => addLine(data.found ? 'line added to broadcast.' : 'unable to verify owner key.', { dim: true }))
+        .catch(() => addLine('announce unavailable right now.', { amber: true }));
+      return;
+    }
+
     if(val === 'whoseen' && isOwnerVerified()){
       fetch('/.netlify/functions/checkname', {
         method: 'POST',
@@ -1056,7 +1161,14 @@
     await printBeats(bootBeats(name));
     await printMenu();
 
+    const ann = await fetchAnnouncement();
+    if(ann.active && ann.lines && ann.lines.length){
+      lastSeenLineId = Math.max(...ann.lines.map(l => l.id));
+      printBroadcastLines(ann.lines);
+    }
+
     startIdleGlitchWatcher();
+    startBroadcastWatcher();
 
     inputRow.style.display = 'flex';
     cmdField.value = '';
