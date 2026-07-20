@@ -180,7 +180,7 @@ const NAME_TABLE = [
   // --- 0.2 batch ---
 
   { names: ['marcy'], addedIn: '0.2', lines: [
-    [{ t: "THAT ISN'T YOUR TRUE NAME IS IT, " }, { t: 'FINN?', c: 'red' }]
+    [{ t: "THAT ISN'T YOUR TRUE NAME IS IT, " }, { t: 'MARCELINE?', c: 'red' }]
   ]},
   { names: ['finn'], addedIn: '0.2', lines: [
     [{ t: 'I APPRECIATE YOUR HONESTY. PROCEED.' }]
