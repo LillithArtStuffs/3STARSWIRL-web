@@ -1,5 +1,20 @@
 const { getStore } = require('@netlify/blobs');
 
+// Netlify's automatic Blobs configuration (siteID/token auto-injected)
+// doesn't reliably work with this function syntax — a known, widely
+// reported Netlify issue, not something specific to this code. Passing
+// these explicitly is the reliable fix. Both come from environment
+// variables set in the Netlify dashboard (Site settings > Environment
+// variables), NOT hardcoded here — see setup notes at the bottom of
+// this file for how to generate/set them.
+function visitorStore() {
+  return getStore({
+    name: 'visitors',
+    siteID: process.env.NETLIFY_BLOBS_SITE_ID,
+    token: process.env.NETLIFY_BLOBS_TOKEN
+  });
+}
+
 // A small fixed pool of valid dev-access passphrases. Anyone who has ONE
 // of these unlocks full owner access — there's no way to tell them apart
 // or revoke just one individually (no database here, just this file), so
@@ -42,7 +57,7 @@ function getClientIp(event) {
 // written; it never touches the devaccess/listNames tools.
 async function logVisitor(ip, name, role) {
   try {
-    const store = getStore('visitors');
+    const store = visitorStore();
     await ensureLaunchMeta(store);
     const key = 'visitor:' + ip;
     const now = new Date().toISOString();
@@ -87,14 +102,14 @@ async function ensureLaunchMeta(store) {
 // public, lightweight: just a count + launch date, no IPs or names.
 // used for the boot-banner visitor count and the 'uptime' command.
 async function siteStats() {
-  const store = getStore('visitors');
+  const store = visitorStore();
   const launch = (await store.get('meta:launch', { type: 'text' })) || null;
   const { blobs } = await store.list({ prefix: 'visitor:' });
   return { count: blobs.length, launch };
 }
 
 async function allVisitors() {
-  const store = getStore('visitors');
+  const store = visitorStore();
   const { blobs } = await store.list({ prefix: 'visitor:' });
   const records = await Promise.all(
     blobs.map(b => store.get(b.key, { type: 'json' }))
@@ -335,3 +350,4 @@ exports.handler = async (event) => {
     })
   };
 };
+
