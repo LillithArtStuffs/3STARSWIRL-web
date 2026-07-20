@@ -366,15 +366,22 @@
     // and iOS doesn't reliably share storage between Safari and a
     // launched home-screen app — so a bookmark needs ?unlock= baked
     // into its saved URL to keep re-authenticating on every launch.
-    // Only skip the strip in that specific case; normal browser tabs
-    // still get it cleaned out of the address bar/history as before.
+    // Skip stripping entirely if already standalone.
     const isStandalone = window.navigator.standalone === true ||
       (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
     if(isStandalone) return;
 
-    params.delete('unlock');
-    const clean = location.pathname + (params.toString() ? '?' + params.toString() : '');
-    history.replaceState({}, '', clean);
+    // otherwise, still strip it eventually so it doesn't linger in
+    // normal browsing history — but NOT instantly. Stripping happened
+    // within milliseconds of load before, faster than anyone could
+    // realistically tap Share > Add to Home Screen. This delay gives
+    // a real window to do that while the URL still has the key in it.
+    setTimeout(() => {
+      const p = new URLSearchParams(location.search);
+      p.delete('unlock');
+      const clean = location.pathname + (p.toString() ? '?' + p.toString() : '');
+      history.replaceState({}, '', clean);
+    }, 20000);
   }
 
   // prints one or more lines, each an array of {t, c} segments.
