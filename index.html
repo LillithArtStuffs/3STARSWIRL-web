@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>3STARSWIRL</title>
+<meta name="description" content="3STARSWIRL — an experimental media initiative. State your name to continue.">
+<meta property="og:title" content="3STARSWIRL">
+<meta property="og:description" content="An experimental media initiative. State your name to continue.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://3starswirl.com">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="3STARSWIRL">
+<meta name="twitter:description" content="An experimental media initiative. State your name to continue.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -634,6 +642,7 @@
   const OWNER_HELP_LINES = [
     '',
     'owner commands:',
+    '  debug             - show your local owner state',
     '  rename            - test names again',
     '  glitch1           - replay intro glitch',
     '  glitch2           - fire idle glitch now',
@@ -926,6 +935,21 @@
     if(val === 'whoami'){
       const who = currentSessionName || '(no name entered yet)';
       addLine(`${who}  [${ownerRole()}]`, { dim: true });
+      return;
+    }
+
+    if(val === 'debug' && isOwnerVerified()){
+      const key = localStorage.getItem('swirl_owner_key') || '';
+      const masked = key ? key.slice(0, 6) + '...' + key.slice(-4) : '(empty)';
+      printBeats([
+        { lines: [
+          { text: 'swirl_owner: ' + (localStorage.getItem('swirl_owner') || '(unset)') },
+          { text: 'swirl_owner_role: ' + (localStorage.getItem('swirl_owner_role') || '(unset)') },
+          { text: 'swirl_owner_key: ' + masked },
+          { text: 'flags: ' + JSON.stringify(getClientFlags()) }
+        ].map(l => ({ text: l.text, dim: true })), holdMs: 0 },
+        { lines: [{ text: '' }], holdMs: 0 }
+      ]);
       return;
     }
 
