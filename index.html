@@ -1,18 +1,42 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>3STARSWIRL</title>
-  <style>
-    body {
-      background:black;
-      color:white;
-      font-family:monospace;
-      text-align:center;
-      margin-top:20%;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>...</title>
 </head>
-<body>
-  <h1>Site under maintenance.</h1>
-  <p>We'll be back soon.</p>
+<body style="background:white;color:black;font-family:serif;">
+  <div id="text"></div>
+
+  <script>
+    const text = document.getElementById("text");
+
+    const lines = [
+      { text: "it’s over", delay: 0 },
+      { text: "you can go home now", delay: 1500 },
+      { text: "bye", delay: 3000 },
+      { text: "why are you still here", delay: 33000 }, // ~30 second pause
+      { text: "it’s over", delay: 34500 },
+      { text: "goodbye for real", delay: 36000 }
+    ];
+
+    lines.forEach(line => {
+      setTimeout(() => {
+        text.innerHTML += line.text + "<br>";
+      }, line.delay);
+    });
+
+    // Try to close the tab after the final message.
+    // If that isn't allowed by the browser, go to about:blank.
+    setTimeout(() => {
+      window.close();
+
+      setTimeout(() => {
+        if (!window.closed) {
+          location.replace("about:blank");
+        }
+      }, 500);
+    }, 38000);
+  </script>
 </body>
 </html>
