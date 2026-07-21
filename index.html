@@ -394,7 +394,7 @@
       el.className = 'line';
       lines[i].forEach(seg => {
         const span = document.createElement('span');
-        span.className = 'seg-' + (seg.c || 'amber');
+        span.style.color = resolveAnnounceColor(seg.c || 'amber');
         span.textContent = seg.t;
         el.appendChild(span);
       });
@@ -459,12 +459,30 @@
   }
 
   // maps a broadcast color name to the right addLine opts key
-  function colorOpts(name){
-    if(name === 'grey') return { dim: true };
-    if(name === 'purple') return { purple: true };
-    if(name === 'red') return { red: true };
-    if(name === 'accent') return { accent: true };
-    return { amber: true };
+  const HEX_COLOR_DETECT_PATTERN = /^#[0-9a-fA-F]{3}$|^#[0-9a-fA-F]{6}$/;
+  const HEX_COLOR_RENDER_PATTERN = /^#?[0-9a-fA-F]{3}$|^#?[0-9a-fA-F]{6}$/;
+
+  // resolves a broadcast color (named or hex) to an actual CSS color value.
+  // named colors map to the existing CSS vars so they stay in sync with
+  // purple-mode etc; hex codes pass straight through.
+  function resolveAnnounceColor(color){
+    if(color === 'grey') return 'var(--text-dim)';
+    if(color === 'purple') return 'var(--purple)';
+    if(color === 'red') return 'var(--red)';
+    if(color === 'accent') return 'var(--accent)';
+    if(color === 'amber') return 'var(--amber)';
+    if(HEX_COLOR_RENDER_PATTERN.test(color || '')) return color.startsWith('#') ? color : '#' + color;
+    return 'var(--amber)';
+  }
+
+  function addColoredLine(text, colorValue){
+    const el = document.createElement('div');
+    el.className = 'line';
+    el.style.color = colorValue;
+    el.textContent = text;
+    linesEl.appendChild(el);
+    scrollDown();
+    return el;
   }
 
   function printBeat(lines, holdMs){
@@ -561,6 +579,28 @@
   let lastSeenLineId = 0;
   let broadcastIntervalId = null;
 
+  // builds a CSV and triggers an actual file download — used by
+  // 'whoseen export'. runs entirely client-side, no server involved
+  // beyond the data already fetched for the normal whoseen display.
+  function downloadVisitorsCSV(visitors){
+    const header = 'ip,lastName,role,firstSeen,lastSeen,visitCount';
+    const escape = v => '"' + String(v).replace(/"/g, '""') + '"';
+    const rows = visitors.map(v =>
+      [v.ip, v.lastName, v.role, v.firstSeen, v.lastSeen, v.visitCount].map(escape).join(',')
+    );
+    const csv = [header].concat(rows).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `3starswirl-visitors-${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   async function fetchAnnouncement(){
     try{
       const res = await fetch('/.netlify/functions/checkname', {
@@ -574,14 +614,21 @@
     }
   }
 
-  // prints only the given lines (already filtered to "new" by the caller),
-  // each in its own color, framed with one shared header
+  // prints only the given lines (already filtered to "new" by the caller).
+  // header only appears before a line marked isStart — not on every batch —
+  // and an isEnd line gets a trailing blank line to close things out.
   function printBroadcastLines(lines){
     if(!lines.length) return;
-    addLine('', {});
-    addLine('[[ BROADCAST ]]', { accent: true });
-    lines.forEach(line => addLine(line.text, colorOpts(line.color)));
-    addLine('', {});
+    lines.forEach(line => {
+      if(line.isStart){
+        addLine('', {});
+        addColoredLine('[[ BROADCAST ]]', 'var(--accent)');
+      }
+      addColoredLine(line.text, resolveAnnounceColor(line.color));
+      if(line.isEnd){
+        addLine('', {});
+      }
+    });
     scrollDown();
   }
 
@@ -592,12 +639,12 @@
     broadcastIntervalId = setInterval(async () => {
       if(!menuShown) return;
       const ann = await fetchAnnouncement();
-      if(!ann.active || !ann.lines || !ann.lines.length) return;
+      if(!ann.lines || !ann.lines.length) return;
       const newLines = ann.lines.filter(l => l.id > lastSeenLineId);
       if(!newLines.length) return;
       lastSeenLineId = Math.max(...ann.lines.map(l => l.id));
       printBroadcastLines(newLines);
-    }, 15000);
+    }, 5000);
   }
 
   // ---------------------------------------------------------------
@@ -721,7 +768,7 @@
     'owner commands:',
     '  debug             - show your local owner state',
     '  annc <text>       - append a line to the live broadcast',
-    '  annc <color> <text> - amber/red/grey/purple/accent',
+    '  annc <color> <text> - amber/red/grey/purple/accent, or #hex',
     '  annc clear        - end the current broadcast',
     '  (announce works too, annc is just shorter)',
     '  rename            - test names again',
@@ -732,7 +779,10 @@
     '  listname -<ver>   - list names from a version',
     '  newnames          - list names added this version',
     '  devaccess         - generate a dev-unlock link',
-    '  whoseen           - last-seen visitor log'
+    '  whoseen           - last-seen visitor log (last 5)',
+    '  whoseen -all      - full visitor log',
+    '  whoseen -<n>      - last n visitors',
+    '  whoseen export all/<n> - download as CSV'
   ];
 
   // vanishingly rare: selecting a menu option by number or click can,
@@ -968,17 +1018,20 @@
       }
 
       const ANNOUNCE_COLORS = ['amber', 'red', 'grey', 'purple', 'accent'];
-      const firstWord = rest.split(' ')[0].toLowerCase();
+      const firstWord = rest.split(' ')[0];
+      const firstWordLower = firstWord.toLowerCase();
+      const isNamedColor = ANNOUNCE_COLORS.includes(firstWordLower);
+      const isHexColor = HEX_COLOR_DETECT_PATTERN.test(firstWord);
       let color = 'amber';
       let text = rest;
-      if(ANNOUNCE_COLORS.includes(firstWord)){
-        color = firstWord;
+      if(isNamedColor || isHexColor){
+        color = isNamedColor ? firstWordLower : firstWord;
         text = rest.slice(firstWord.length).trim();
       }
 
       if(!text){
         addLine('usage: annc <text>  or  annc <color> <text>  or  annc clear', { dim: true });
-        addLine('colors: amber, red, grey, purple, accent', { dim: true });
+        addLine('colors: amber, red, grey, purple, accent, or a hex code like #ff00ff', { dim: true });
         addLine('each call appends a new line to the current broadcast.', { dim: true });
         return;
       }
@@ -994,7 +1047,11 @@
       return;
     }
 
-    if(val === 'whoseen' && isOwnerVerified()){
+    const whoSeenMatch = val === 'whoseen' || val.startsWith('whoseen ');
+    if(whoSeenMatch && isOwnerVerified()){
+      const rest = raw.trim().slice('whoseen'.length).trim();
+      const parts = rest.split(/\s+/).filter(Boolean);
+
       fetch('/.netlify/functions/checkname', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1010,12 +1067,29 @@
             addLine('no visitors logged yet.', { dim: true });
             return;
           }
-          const rows = data.visitors.map(v => {
+
+          // export mode: whoseen export all / whoseen export <n>
+          if(parts[0] && parts[0].toLowerCase() === 'export'){
+            const arg = (parts[1] || 'all').toLowerCase();
+            const count = arg === 'all' ? data.visitors.length : (parseInt(arg, 10) || 5);
+            downloadVisitorsCSV(data.visitors.slice(0, count));
+            addLine(`exported ${Math.min(count, data.visitors.length)} record(s).`, { dim: true });
+            return;
+          }
+
+          // display mode: default 5, whoseen -all, whoseen -<n>
+          let limit = 5;
+          const flag = (parts[0] || '').toLowerCase();
+          if(flag === '-all') limit = data.visitors.length;
+          else if(/^-\d+$/.test(flag)) limit = parseInt(flag.slice(1), 10);
+
+          const shown = data.visitors.slice(0, limit);
+          const rows = shown.map(v => {
             const roleTag = '[' + v.role + ']';
             return `  ${roleTag.padEnd(9,' ')} ${v.ip}  "${v.lastName}"  last seen ${v.lastSeen}  (${v.visitCount}x)`;
           });
           printBeats([
-            { lines: [{ text: 'visitor log (most recent first):', dim: true }], holdMs: 0 },
+            { lines: [{ text: `visitor log (${shown.length} of ${data.visitors.length}, most recent first):`, dim: true }], holdMs: 0 },
             { lines: rows.map(r => ({ text: r, dim: true })), holdMs: 0 },
             { lines: [{ text: '' }], holdMs: 0 }
           ]);
