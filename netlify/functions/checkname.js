@@ -20,6 +20,13 @@ function visitorStore() {
 // line (not a replace), and each line gets its own id (a timestamp) so
 // clients can tell exactly which lines they haven't shown yet.
 const VALID_ANNOUNCE_COLORS = ['amber', 'red', 'grey', 'purple', 'accent'];
+const HEX_COLOR_PATTERN = /^#?[0-9a-fA-F]{3}$|^#?[0-9a-fA-F]{6}$/;
+
+function resolveAnnounceColor(color) {
+  if (VALID_ANNOUNCE_COLORS.includes(color)) return color;
+  if (HEX_COLOR_PATTERN.test(color)) return color.startsWith('#') ? color : '#' + color;
+  return 'amber';
+}
 
 async function getAnnouncement() {
   const store = visitorStore();
@@ -31,11 +38,13 @@ async function appendAnnouncementLine(text, color) {
   const store = visitorStore();
   const existing = await store.get('meta:announcement', { type: 'json' });
   const lines = (existing && Array.isArray(existing.lines)) ? existing.lines : [];
+  const isFreshBroadcast = !existing || !existing.active || lines.length === 0;
 
   lines.push({
     text,
-    color: VALID_ANNOUNCE_COLORS.includes(color) ? color : 'amber',
-    id: Date.now()
+    color: resolveAnnounceColor(color),
+    id: Date.now(),
+    isStart: isFreshBroadcast
   });
 
   const record = { active: true, lines };
@@ -45,7 +54,24 @@ async function appendAnnouncementLine(text, color) {
 
 async function clearAnnouncement() {
   const store = visitorStore();
-  await store.setJSON('meta:announcement', { active: false, lines: [] });
+  const existing = await store.get('meta:announcement', { type: 'json' });
+  const hadActiveContent = existing && existing.active && Array.isArray(existing.lines) && existing.lines.length > 0;
+
+  if (!hadActiveContent) {
+    // nothing was actually live — just reset cleanly, no "ended" marker needed
+    await store.setJSON('meta:announcement', { active: false, lines: [] });
+    return;
+  }
+
+  // keep the lines (so anyone still watching can catch the end marker
+  // via the normal new-line polling), just mark it ended
+  const lines = existing.lines.concat([{
+    text: '[[ BROADCAST ENDED ]]',
+    color: 'grey',
+    id: Date.now(),
+    isEnd: true
+  }]);
+  await store.setJSON('meta:announcement', { active: false, lines });
 }
 
 // A small fixed pool of valid dev-access passphrases. Anyone who has ONE
@@ -198,10 +224,13 @@ const NAME_TABLE = [
     [{ t: "WELL, WELL, WELL. YOU'RE AN " }, { t: 'INTERESTING', c: 'red' }, { t: ' ONE.' }]
   ]},
   { names: ['aven'], addedIn: '0.1', ownerOnly: true, setSessionCookie: true, lines: [
-    [{ t: 'my muse.' }]
+    [{ t: 'my muse.', c: '#ffc6e7' }]
   ]},
   { names: ['cringus'], addedIn: '0.2.2', ownerOnly: true, setSessionCookie: true, lines: [
     [{ t: 'my muse', c: 'purple' }]
+  ]},
+  { names: ['meowmeowmarcy'], addedIn: '0.2.6', ownerOnly: true, setSessionCookie: true, lines: [
+    [{ t: 'my muse', c: '#2dd4bf' }]
   ]},
   { names: ['mori'], addedIn: '0.1', lines: [
     [{ t: 'WELCOME, CHILD OF THE TREES.' }]
