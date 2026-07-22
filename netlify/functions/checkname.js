@@ -127,6 +127,7 @@ async function logVisitor(ip, name, role) {
     }
 
     record.lastSeen = now;
+    record.lastPing = now;
     record.lastName = name || '(blank)';
     record.visitCount = (record.visitCount || 0) + 1;
 
@@ -141,6 +142,24 @@ async function logVisitor(ip, name, role) {
     await store.setJSON(key, record);
   } catch (e) {
     // storage hiccup shouldn't ever break the actual name-check response
+  }
+}
+
+// lightweight ping — updates lastPing only, doesn't touch visitCount or
+// lastName. Called periodically by anyone actively sitting in the
+// terminal, so the dashboard can tell "seen 3 days ago" apart from
+// "here right now."
+async function pingVisitor(ip) {
+  try {
+    const store = visitorStore();
+    const key = 'visitor:' + ip;
+    const now = new Date().toISOString();
+    let record = await store.get(key, { type: 'json' });
+    if (!record) return; // no prior visit logged, nothing to ping
+    record.lastPing = now;
+    await store.setJSON(key, record);
+  } catch (e) {
+    // non-critical
   }
 }
 
@@ -176,6 +195,16 @@ async function allVisitors() {
   return records
     .filter(Boolean)
     .sort((a, b) => new Date(b.lastSeen) - new Date(a.lastSeen));
+}
+
+// "active right now" — anyone whose last heartbeat ping was within the
+// last 90 seconds. Heartbeats fire every 30s from the main site while
+// someone's actually sitting in the terminal, so 90s gives a little
+// slack for a missed beat before someone drops off this list.
+async function activeVisitors() {
+  const all = await allVisitors();
+  const cutoff = Date.now() - 90000;
+  return all.filter(v => v.lastPing && new Date(v.lastPing).getTime() > cutoff);
 }
 
 // Each entry:
@@ -304,6 +333,17 @@ exports.handler = async (event) => {
   const role = roleForKey(ownerKey);
   const isOwner = role !== 'visitor';
 
+  // public — no owner check. anyone actively in the terminal pings this
+  // periodically so the dashboard can show who's here right now.
+  if (body.heartbeat) {
+    await pingVisitor(getClientIp(event));
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ok: true })
+    };
+  }
+
   // public — no owner check. just a count + launch date, safe for anyone.
   if (body.siteStats) {
     const stats = await siteStats();
@@ -371,6 +411,58 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ found: true, visitors })
+    };
+  }
+
+  // owner-only: who's active right now (dev dashboard)
+  if (body.activeVisitors) {
+    if (!isOwner) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: false })
+      };
+    }
+    const active = await activeVisitors();
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ found: true, active })
+    };
+  }
+
+  // owner-only: basic diagnostics (dev dashboard)
+  if (body.diagnostics) {
+    if (!isOwner) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: false })
+      };
+    }
+    let blobsOk = true;
+    let blobsError = null;
+    try {
+      await visitorStore().get('meta:launch', { type: 'text' });
+    } catch (e) {
+      blobsOk = false;
+      blobsError = e.message;
+    }
+    const stats = await siteStats();
+    const active = await activeVisitors();
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        found: true,
+        blobsOk,
+        blobsError,
+        totalVisitors: stats.count,
+        launch: stats.launch,
+        activeNow: active.length,
+        nameCount: NAME_TABLE.length,
+        devKeyCount: DEV_KEYS.length
+      })
     };
   }
 
