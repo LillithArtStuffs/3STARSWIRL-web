@@ -5,19 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>3STARSWIRL — Dev</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper: #eeece4;
-    --paper-2: #e4e1d6;
-    --ink: #1a1a17;
-    --ink-dim: #5c5a4f;
-    --ink-faint: #948f7d;
-    --rule: #1a1a17;
-    --hazard: #d9520c;
-    --hazard-dim: #a5410a;
-    --good: #2f6b3a;
-    --bad: #b3261e;
+    --bg: #0a0c10;
+    --surface: #12151b;
+    --surface-2: #181c24;
+    --border: #262b35;
+    --text: #e8eaed;
+    --text-dim: #838a99;
+    --text-faint: #4d5566;
+    --restricted: #e5484d;
+    --restricted-dim: #b23a3e;
+    --clear: #3fb950;
+    --amber: #d29922;
   }
 
   *{ box-sizing: border-box; }
@@ -26,25 +27,35 @@
     margin: 0;
     padding: 0;
     min-height: 100%;
-    background: var(--paper);
-    color: var(--ink);
+    background: var(--bg);
+    color: var(--text);
   }
 
   body{
-    font-family: 'JetBrains Mono', Consolas, monospace;
-    font-size: 13px;
-    background-image:
-      linear-gradient(var(--paper-2) 1px, transparent 1px),
-      linear-gradient(90deg, var(--paper-2) 1px, transparent 1px);
-    background-size: 28px 28px;
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 13.5px;
   }
 
-  ::selection{ background: var(--hazard); color: var(--paper); }
+  .mono{ font-family: 'JetBrains Mono', Consolas, monospace; }
+
+  /* ---- classified banner ---- */
+
+  .banner{
+    background: var(--restricted);
+    color: #1a0505;
+    text-align: center;
+    padding: 5px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
 
   /* ---- gate screen ---- */
 
   .gate{
-    min-height: 100vh;
+    min-height: calc(100vh - 28px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -53,78 +64,73 @@
     padding: 20px;
   }
 
-  .gate .stamp{
-    border: 3px solid var(--hazard);
-    color: var(--hazard);
-    padding: 6px 16px;
+  .gate .mark{
+    border: 1.5px solid var(--restricted);
+    color: var(--restricted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
     font-weight: 700;
-    font-size: 13px;
     letter-spacing: 2px;
-    transform: rotate(-2deg);
+    padding: 5px 14px;
+    text-transform: uppercase;
   }
 
-  .gate h1{
-    font-size: 15px;
-    font-weight: 700;
-    margin: 0;
-    letter-spacing: 0.5px;
-  }
-
-  .gate p{
-    color: var(--ink-dim);
-    font-size: 12px;
-    margin: -6px 0 0 0;
-  }
+  .gate h1{ font-size: 16px; font-weight: 700; margin: 0; }
+  .gate p{ color: var(--text-dim); font-size: 12.5px; margin: -6px 0 0 0; }
 
   .gate input{
-    background: var(--paper);
-    border: 2px solid var(--rule);
-    color: var(--ink);
-    font-family: inherit;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
-    padding: 10px 13px;
+    padding: 11px 14px;
     width: min(320px, 82vw);
+    border-radius: 3px;
+    outline: none;
   }
-  .gate input:focus{ outline: 2px solid var(--hazard); outline-offset: -2px; }
+  .gate input:focus{ border-color: var(--restricted); }
 
   .gate button{
-    background: var(--ink);
-    color: var(--paper);
-    border: 2px solid var(--ink);
-    font-family: inherit;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    font-family: 'Inter', sans-serif;
     font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 10px 22px;
+    font-size: 12.5px;
+    letter-spacing: 0.3px;
+    padding: 11px 24px;
+    border-radius: 3px;
     cursor: pointer;
   }
-  .gate button:hover{ background: var(--hazard); border-color: var(--hazard); }
-  .gate .err{ color: var(--bad); font-size: 12px; min-height: 1em; font-weight: 600; }
+  .gate button:hover{ background: var(--restricted); color: #fff; }
+  .gate .err{ color: var(--restricted); font-size: 12px; min-height: 1em; font-weight: 600; }
 
   .help-box{
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    max-width: 260px;
-    background: var(--paper);
-    border: 2px solid var(--rule);
-    padding: 12px 14px;
+    bottom: 18px;
+    right: 18px;
+    max-width: 250px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 13px 15px;
     font-size: 11.5px;
-    color: var(--ink-dim);
-    line-height: 1.6;
+    color: var(--text-dim);
+    line-height: 1.55;
   }
   .help-box strong{
-    color: var(--ink);
+    color: var(--text);
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.6px;
   }
+  .help-box code{ color: var(--amber); font-family: 'JetBrains Mono', monospace; }
 
   @media (max-width: 520px){
-    .help-box{ position: static; margin-top: 4px; max-width: min(320px, 82vw); }
+    .help-box{ position: static; margin-top: 6px; max-width: min(320px, 82vw); }
   }
 
   /* ---- app shell ---- */
@@ -133,69 +139,80 @@
   .app.show{ display: block; }
 
   header.top{
-    border-bottom: 3px solid var(--rule);
+    border-bottom: 1px solid var(--border);
     padding: 14px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
-    background: var(--paper);
+    gap: 10px;
+    background: var(--surface);
   }
 
   header.top .title{
     font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 1px;
-  }
-
-  header.top .title .hazard-text{ color: var(--hazard); }
-
-  header.top .status{
+    font-size: 13.5px;
+    letter-spacing: 0.3px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    gap: 10px;
   }
 
-  .stamp-badge{
-    border: 2px solid currentColor;
-    padding: 2px 9px;
+  header.top .title .badge-tag{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
     font-weight: 700;
-    font-size: 10.5px;
     letter-spacing: 1px;
+    color: var(--restricted);
+    border: 1px solid var(--restricted-dim);
+    padding: 2px 8px;
+    border-radius: 3px;
   }
-  .stamp-badge.ok{ color: var(--good); }
-  .stamp-badge.bad{ color: var(--bad); }
+
+  header.top .ver{ color: var(--text-faint); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+
+  .status-pill{
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 3px;
+  }
+  .status-pill .dot{ width: 6px; height: 6px; border-radius: 50%; background: var(--clear); }
+  .status-pill.bad .dot{ background: var(--restricted); }
+  .status-pill.bad{ color: var(--restricted); border-color: var(--restricted-dim); }
 
   nav.tabs{
     display: flex;
-    border-bottom: 3px solid var(--rule);
-    background: var(--paper-2);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
     overflow-x: auto;
+    padding: 0 24px;
   }
 
   nav.tabs button{
     background: transparent;
     border: none;
-    border-right: 2px solid var(--rule);
-    color: var(--ink-dim);
-    font-family: inherit;
-    font-size: 11.5px;
+    border-bottom: 2px solid transparent;
+    color: var(--text-dim);
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 11px 18px;
+    padding: 13px 16px;
     cursor: pointer;
     white-space: nowrap;
   }
-  nav.tabs button:hover{ color: var(--ink); }
-  nav.tabs button.active{ background: var(--ink); color: var(--paper); }
+  nav.tabs button:hover{ color: var(--text); }
+  nav.tabs button.active{ color: var(--text); border-bottom-color: var(--restricted); }
 
   main{
-    max-width: 860px;
+    max-width: 880px;
     margin: 0 auto;
     padding: 26px 24px 60px;
   }
@@ -204,118 +221,129 @@
   .panel.show{ display: block; }
 
   .page-head{ margin-bottom: 18px; }
-  .page-head h1{ font-size: 16px; font-weight: 700; margin: 0 0 4px 0; letter-spacing: 0.5px; }
-  .page-head p{ color: var(--ink-dim); font-size: 12px; margin: 0; }
+  .page-head h1{ font-size: 17px; font-weight: 700; margin: 0 0 4px 0; }
+  .page-head p{ color: var(--text-dim); font-size: 12.5px; margin: 0; }
 
   .card{
-    background: var(--paper);
-    border: 2px solid var(--rule);
-    padding: 16px 18px;
-    margin-bottom: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 17px 19px;
+    margin-bottom: 15px;
   }
 
   .card h2{
-    font-size: 11px;
+    font-size: 10.5px;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--ink);
+    letter-spacing: 1px;
+    color: var(--text-faint);
     font-weight: 700;
-    margin: 0 0 12px 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid var(--rule);
+    margin: 0 0 13px 0;
   }
 
-  .card p.hint{ font-size: 11.5px; color: var(--ink-faint); margin: -6px 0 12px 0; }
+  .card p.hint{ font-size: 11.5px; color: var(--text-faint); margin: -6px 0 12px 0; }
 
   .row{ display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
 
   .row input, .row select{
-    background: var(--paper);
-    border: 2px solid var(--rule);
-    color: var(--ink);
-    font-family: inherit;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
     font-size: 12.5px;
-    padding: 8px 10px;
+    padding: 8px 11px;
+    border-radius: 5px;
+    outline: none;
   }
-  .row input:focus, .row select:focus{ outline: 2px solid var(--hazard); outline-offset: -2px; }
+  .row input:focus, .row select:focus{ border-color: var(--restricted); }
   .row input[type="text"]{ flex: 1; min-width: 160px; }
-  .row .hexfield{ width: 110px; }
+  .row .hexfield{ font-family: 'JetBrains Mono', monospace; width: 110px; }
 
   button.btn{
-    background: var(--paper);
-    border: 2px solid var(--rule);
-    color: var(--ink);
-    font-family: inherit;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
     font-weight: 600;
-    font-size: 11.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 9px 16px;
+    font-size: 12px;
+    padding: 8px 15px;
+    border-radius: 5px;
     cursor: pointer;
   }
-  button.btn:hover{ background: var(--ink); color: var(--paper); }
-  button.btn.danger{ border-color: var(--bad); color: var(--bad); }
-  button.btn.danger:hover{ background: var(--bad); color: var(--paper); }
-  button.btn.primary{ background: var(--hazard); color: var(--paper); border-color: var(--hazard); }
-  button.btn.primary:hover{ background: var(--hazard-dim); border-color: var(--hazard-dim); }
+  button.btn:hover{ border-color: var(--text-dim); }
+  button.btn.danger{ border-color: var(--restricted-dim); color: var(--restricted); }
+  button.btn.danger:hover{ background: var(--restricted); color: #fff; border-color: var(--restricted); }
+  button.btn.primary{ background: var(--text); color: var(--bg); border-color: var(--text); }
+  button.btn.primary:hover{ background: var(--restricted); color: #fff; border-color: var(--restricted); }
   button.btn.link{ text-decoration: none; display: inline-block; }
+  button.btn.small{ padding: 4px 9px; font-size: 10.5px; }
 
   .broadcast-preview{
-    background: var(--paper-2);
-    border: 2px dashed var(--ink-faint);
-    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 13px 15px;
     min-height: 56px;
     font-size: 12.5px;
     line-height: 1.7;
     white-space: pre-wrap;
+    font-family: 'JetBrains Mono', monospace;
   }
-  .broadcast-preview .empty{ color: var(--ink-faint); font-style: italic; }
+  .broadcast-preview .empty{ color: var(--text-faint); font-family: 'Inter', sans-serif; font-style: italic; }
 
+  .table-wrap{ overflow-x: auto; }
   table{ width: 100%; border-collapse: collapse; font-size: 12px; }
-  th, td{ text-align: left; padding: 8px 9px; border-bottom: 1px solid var(--ink-faint); }
-  th{ color: var(--ink-dim); font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.6px; border-bottom: 2px solid var(--rule); }
+  th, td{ text-align: left; padding: 8px 9px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  td{ font-family: 'JetBrains Mono', monospace; }
+  th{ color: var(--text-faint); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; font-family: 'Inter', sans-serif; }
 
-  .role-tag{
+  .clearance{
+    font-family: 'Inter', sans-serif;
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 1px 7px;
-    border: 1.5px solid currentColor;
+    letter-spacing: 0.4px;
+    padding: 2px 8px;
+    border-radius: 3px;
   }
-  .role-tag.owner{ color: #6b3fa0; }
-  .role-tag.dev{ color: var(--hazard); }
-  .role-tag.visitor{ color: var(--ink-faint); }
+  .clearance.owner{ background: #a371f722; color: #a371f7; }
+  .clearance.dev{ background: #58a6ff22; color: #58a6ff; }
+  .clearance.visitor{ background: var(--surface-2); color: var(--text-faint); }
 
-  .diag-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 2px solid var(--rule); }
+  .ip-cell{ cursor: pointer; color: var(--text-dim); }
+  .ip-cell:hover{ color: var(--text); }
+  .ip-cell .masked::after{ content: '••••••••'; letter-spacing: 1px; }
+
+  .reveal-toggle{ margin-bottom: 10px; }
+
+  .diag-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 
   @media (max-width: 640px){
     .diag-grid{ grid-template-columns: 1fr 1fr; }
     main{ padding: 20px 14px 50px; }
+    nav.tabs{ padding: 0 14px; }
   }
 
-  .diag-item{
-    padding: 12px 14px;
-    border-right: 1px solid var(--ink-faint);
-    border-bottom: 1px solid var(--ink-faint);
-  }
-  .diag-item .label{ color: var(--ink-faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .diag-item .value{ font-size: 18px; font-weight: 700; margin-top: 3px; }
-  .diag-item .value.ok{ color: var(--good); }
-  .diag-item .value.bad{ color: var(--bad); }
+  .diag-item{ background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
+  .diag-item .label{ color: var(--text-faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .diag-item .value{ font-size: 17px; font-family: 'JetBrains Mono', monospace; margin-top: 3px; font-weight: 600; }
+  .diag-item .value.ok{ color: var(--clear); }
+  .diag-item .value.bad{ color: var(--restricted); }
 
-  .status-msg{ font-size: 11.5px; color: var(--ink-dim); min-height: 1em; margin-top: 8px; word-break: break-all; }
-  .empty-note{ color: var(--ink-faint); font-size: 12.5px; padding: 6px 0; font-style: italic; }
+  .status-msg{ font-size: 11.5px; color: var(--text-dim); min-height: 1em; margin-top: 8px; font-family: 'JetBrains Mono', monospace; word-break: break-all; }
+  .empty-note{ color: var(--text-faint); font-size: 12.5px; padding: 6px 0; font-style: italic; }
 </style>
 </head>
 <body>
 
+<div class="banner">Authorized Personnel Only — Session Logged</div>
+
 <div class="gate" id="gate">
-  <div class="stamp">3STARSWIRL // DEV</div>
-  <h1>ACCESS REQUIRED</h1>
-  <p>Enter your key to continue</p>
+  <div class="mark">3STARSWIRL // DEV ACCESS</div>
+  <h1>Restricted Console</h1>
+  <p>Enter your access key to continue</p>
   <input id="gateInput" type="text" placeholder="access key" autocomplete="off" spellcheck="false">
-  <button id="gateBtn">Enter</button>
+  <button id="gateBtn">Authenticate</button>
   <div class="err" id="gateErr"></div>
 
   <div class="help-box">
@@ -326,10 +354,8 @@
 
 <div class="app" id="app">
   <header class="top">
-    <div class="title">3STARSWIRL <span class="hazard-text">// DEV</span> &nbsp;<span style="color:var(--ink-faint); font-weight:400;">v0.1</span></div>
-    <div class="status">
-      <span id="statusBadge" class="stamp-badge ok">CHECKING</span>
-    </div>
+    <div class="title">3STARSWIRL <span class="badge-tag">DEV</span> <span class="ver">v0.1</span></div>
+    <div class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">checking</span></div>
   </header>
 
   <nav class="tabs">
@@ -378,22 +404,28 @@
     <div class="panel" id="panel-active">
       <div class="page-head">
         <h1>Active Visitors</h1>
-        <p>Live heartbeat, plus a rolling log of recent activity.</p>
+        <p>Live heartbeat, plus a rolling log of recent activity. IPs are masked by default.</p>
       </div>
       <div class="card">
         <h2>Active Right Now</h2>
-        <table id="activeTable">
-          <thead><tr><th>Role</th><th>IP</th><th>Name</th><th>Last ping</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="reveal-toggle"><button class="btn small" id="revealActiveBtn">Reveal IPs</button></div>
+        <div class="table-wrap">
+          <table id="activeTable">
+            <thead><tr><th>Clearance</th><th>IP</th><th>Name</th><th>Last ping</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
         <div class="empty-note" id="activeEmpty" style="display:none;">Nobody active right now.</div>
       </div>
       <div class="card">
         <h2>Recent Activity (last 10)</h2>
-        <table id="recentTable">
-          <thead><tr><th>Role</th><th>IP</th><th>Name</th><th>Last seen</th><th>Visits</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="reveal-toggle"><button class="btn small" id="revealRecentBtn">Reveal IPs</button></div>
+        <div class="table-wrap">
+          <table id="recentTable">
+            <thead><tr><th>Clearance</th><th>IP</th><th>Name</th><th>Last seen</th><th>Visits</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
         <div class="empty-note" id="recentEmpty" style="display:none;">No visitors logged yet.</div>
       </div>
     </div>
@@ -537,12 +569,12 @@
   });
 
   function resolveColor(name){
-    if(name === 'grey') return '#8a8570';
-    if(name === 'purple') return '#6b3fa0';
-    if(name === 'red') return '#b3261e';
-    if(name === 'accent') return '#2f6b3a';
+    if(name === 'grey') return '#8b949e';
+    if(name === 'purple') return '#a371f7';
+    if(name === 'red') return '#e5484d';
+    if(name === 'accent') return '#3fb950';
     if(/^#?[0-9a-fA-F]{3}$|^#?[0-9a-fA-F]{6}$/.test(name || '')) return name.startsWith('#') ? name : '#' + name;
-    return '#d9520c';
+    return '#d29922';
   }
 
   async function refreshBroadcastPreview(){
@@ -553,7 +585,7 @@
       return;
     }
     el.innerHTML = data.lines.map(l =>
-      `<div style="color:${resolveColor(l.color)}; font-weight:600;">${l.text.replace(/</g,'&lt;')}</div>`
+      `<div style="color:${resolveColor(l.color)}">${l.text.replace(/</g,'&lt;')}</div>`
     ).join('');
   }
 
@@ -578,8 +610,29 @@
   });
 
   // ---------------------------------------------------------------
-  // active + recent visitors
+  // active + recent visitors — IPs masked by default
   // ---------------------------------------------------------------
+
+  let activeRevealed = false;
+  let recentRevealed = false;
+
+  function ipCell(ip, revealed){
+    return revealed
+      ? ip
+      : `<span title="click Reveal IPs above to view">${'•'.repeat(Math.min(ip.length, 10))}</span>`;
+  }
+
+  document.getElementById('revealActiveBtn').addEventListener('click', () => {
+    activeRevealed = !activeRevealed;
+    document.getElementById('revealActiveBtn').textContent = activeRevealed ? 'Hide IPs' : 'Reveal IPs';
+    refreshActive();
+  });
+
+  document.getElementById('revealRecentBtn').addEventListener('click', () => {
+    recentRevealed = !recentRevealed;
+    document.getElementById('revealRecentBtn').textContent = recentRevealed ? 'Hide IPs' : 'Reveal IPs';
+    refreshRecent();
+  });
 
   async function refreshActive(){
     const data = await api({ activeVisitors: true });
@@ -595,8 +648,8 @@
     data.active.forEach(v => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><span class="role-tag ${v.role}">${v.role}</span></td>
-        <td>${v.ip}</td>
+        <td><span class="clearance ${v.role}">${v.role}</span></td>
+        <td>${ipCell(v.ip, activeRevealed)}</td>
         <td>${(v.lastName || '').replace(/</g,'&lt;')}</td>
         <td>${v.lastPing || ''}</td>
       `;
@@ -619,8 +672,8 @@
     recent.forEach(v => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><span class="role-tag ${v.role}">${v.role}</span></td>
-        <td>${v.ip}</td>
+        <td><span class="clearance ${v.role}">${v.role}</span></td>
+        <td>${ipCell(v.ip, recentRevealed)}</td>
         <td>${(v.lastName || '').replace(/</g,'&lt;')}</td>
         <td>${v.lastSeen || ''}</td>
         <td>${v.visitCount || 0}</td>
@@ -636,16 +689,16 @@
   async function refreshDiagnostics(){
     const data = await api({ diagnostics: true });
     const grid = document.getElementById('diagGrid');
-    const badge = document.getElementById('statusBadge');
+    const pill = document.getElementById('statusPill');
+    const statusText = document.getElementById('statusText');
 
     if(!data.found){
       grid.innerHTML = '<div class="empty-note">Unable to load diagnostics.</div>';
       return;
     }
 
-    badge.textContent = data.blobsOk ? 'ONLINE' : 'ERROR';
-    badge.classList.toggle('ok', data.blobsOk);
-    badge.classList.toggle('bad', !data.blobsOk);
+    pill.classList.toggle('bad', !data.blobsOk);
+    statusText.textContent = data.blobsOk ? 'systems normal' : 'storage error';
 
     const items = [
       ['Blobs storage', data.blobsOk ? 'OK' : 'Error', data.blobsOk],
