@@ -3,20 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3STARSWIRL — dev</title>
+<title>3STARSWIRL — Dev</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #0b0d0b;
-    --panel: #12150f;
-    --border: #23281f;
-    --text: #d7dbd7;
-    --text-dim: #6b756b;
-    --accent: #6fe08a;
-    --amber: #ffcc4d;
-    --red: #ff3b3b;
-    --purple: #b478ff;
+    --bg: #14161c;
+    --surface: #1b1e26;
+    --surface-2: #22252f;
+    --border: #2b2f3b;
+    --text: #e4e6ec;
+    --text-dim: #8a8fa3;
+    --text-faint: #565b6e;
+    --accent: #7c8cff;
+    --accent-soft: #7c8cff22;
+    --good: #5bd6a0;
+    --bad: #ff6b6b;
   }
 
   *{ box-sizing: border-box; }
@@ -30,8 +32,9 @@
   }
 
   body{
-    font-family: 'JetBrains Mono', Consolas, 'SFMono-Regular', Menlo, monospace;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 14px;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ---- gate screen ---- */
@@ -42,295 +45,349 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    gap: 14px;
+    gap: 18px;
     padding: 20px;
+    position: relative;
   }
 
-  .gate h1{
-    color: var(--accent);
-    font-size: 18px;
-    letter-spacing: 1px;
-    margin: 0;
+  .gate .mark{
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #4b56c9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    color: #fff;
   }
+
+  .gate h1{ font-size: 15px; font-weight: 600; margin: 0; }
+  .gate p{ color: var(--text-dim); font-size: 13px; margin: -8px 0 0 0; }
 
   .gate input{
-    background: var(--panel);
+    background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
-    font-family: inherit;
-    font-size: 14px;
-    padding: 10px 12px;
-    width: min(320px, 80vw);
-    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    padding: 11px 14px;
+    width: min(320px, 82vw);
+    border-radius: 8px;
+    outline: none;
   }
+  .gate input:focus{ border-color: var(--accent); }
 
   .gate button{
     background: var(--accent);
-    color: #06140b;
+    color: #0e0f14;
     border: none;
-    font-family: inherit;
-    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
     font-size: 13px;
-    padding: 10px 18px;
-    border-radius: 4px;
+    padding: 11px 22px;
+    border-radius: 8px;
     cursor: pointer;
   }
+  .gate button:hover{ opacity: 0.9; }
+  .gate .err{ color: var(--bad); font-size: 12px; min-height: 1em; }
 
-  .gate .err{
-    color: var(--red);
+  .help-box{
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    max-width: 260px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
     font-size: 12px;
-    min-height: 1em;
-  }
-
-  /* ---- dashboard shell ---- */
-
-  .app{
-    display: none;
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 16px;
-  }
-
-  .app.show{ display: block; }
-
-  header{
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  header h1{
-    color: var(--accent);
-    font-size: 17px;
-    margin: 0;
-    letter-spacing: 0.5px;
-  }
-
-  header .ver{
     color: var(--text-dim);
-    font-size: 12px;
+    line-height: 1.6;
   }
 
-  nav{
+  .help-box strong{ color: var(--text); display: block; margin-bottom: 6px; font-size: 12.5px; }
+
+  @media (max-width: 520px){
+    .help-box{ position: static; margin-top: 10px; max-width: min(320px, 82vw); }
+  }
+
+  /* ---- app shell ---- */
+
+  .app{ display: none; }
+  .app.show{ display: flex; min-height: 100vh; }
+
+  .sidebar{
+    width: 220px;
+    flex: 0 0 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 14px;
     display: flex;
+    flex-direction: column;
     gap: 4px;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 16px;
-    flex-wrap: wrap;
   }
 
-  nav button{
-    background: transparent;
-    border: none;
-    color: var(--text-dim);
-    font-family: inherit;
-    font-size: 13px;
-    padding: 8px 14px;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
+  .brand{ display: flex; align-items: center; gap: 10px; padding: 6px 10px 20px 10px; }
+  .brand .mark{ width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg, var(--accent), #4b56c9); flex: 0 0 auto; }
+  .brand .name{ font-weight: 700; font-size: 13px; letter-spacing: 0.3px; }
+  .brand .sub{ font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1px; }
+
+  .navlink{
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 7px;
+    color: var(--text-dim); font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none; background: transparent;
+    text-align: left; width: 100%; font-family: inherit;
+  }
+  .navlink:hover{ background: var(--surface-2); color: var(--text); }
+  .navlink.active{ background: var(--accent-soft); color: var(--accent); }
+  .navlink .dot{ width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.7; flex: 0 0 auto; }
+
+  .sidebar-footer{
+    margin-top: auto; padding: 10px; font-size: 11px; color: var(--text-faint);
+    display: flex; align-items: center; gap: 7px;
   }
 
-  nav button.active{
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+  .pulse{ width: 7px; height: 7px; border-radius: 50%; background: var(--good); flex: 0 0 auto; position: relative; }
+  .pulse::after{
+    content: ''; position: absolute; inset: 0; border-radius: 50%;
+    background: var(--good); animation: pulse-ring 1.8s ease-out infinite;
   }
+  .pulse.bad{ background: var(--bad); }
+  .pulse.bad::after{ background: var(--bad); }
+
+  @keyframes pulse-ring{
+    0%{ transform: scale(1); opacity: 0.6; }
+    100%{ transform: scale(2.6); opacity: 0; }
+  }
+
+  main{ flex: 1; padding: 28px 32px; max-width: 880px; }
+
+  .page-head{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; flex-wrap: wrap; gap: 8px; }
+  .page-head h1{ font-size: 19px; font-weight: 700; margin: 0 0 3px 0; }
+  .page-head p{ color: var(--text-dim); font-size: 13px; margin: 0; }
 
   .panel{ display: none; }
   .panel.show{ display: block; }
 
-  .card{
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 14px 16px;
-    margin-bottom: 14px;
-  }
+  .card{ background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+  .card h2{ font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-faint); font-weight: 600; margin: 0 0 14px 0; }
+  .card p.hint{ font-size: 12px; color: var(--text-faint); margin: -8px 0 12px 0; }
 
-  .card h2{
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-dim);
-    margin: 0 0 10px 0;
-  }
-
-  .row{
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 8px;
-  }
-
+  .row{ display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
   .row input, .row select{
-    background: #0e100c;
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 13px;
-    padding: 8px 10px;
-    border-radius: 4px;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+    font-family: inherit; font-size: 13px; padding: 9px 11px; border-radius: 7px; outline: none;
   }
-
+  .row input:focus, .row select:focus{ border-color: var(--accent); }
   .row input[type="text"]{ flex: 1; min-width: 160px; }
+  .row .hexfield{ font-family: 'JetBrains Mono', monospace; width: 110px; }
 
   button.btn{
-    background: #1c2117;
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 13px;
-    padding: 8px 14px;
-    border-radius: 4px;
-    cursor: pointer;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+    font-family: inherit; font-weight: 500; font-size: 13px; padding: 9px 16px; border-radius: 7px; cursor: pointer;
   }
-
-  button.btn:hover{ border-color: var(--accent); color: var(--accent); }
-  button.btn.danger:hover{ border-color: var(--red); color: var(--red); }
-  button.btn.primary{ background: var(--accent); color: #06140b; border-color: var(--accent); font-weight: 700; }
+  button.btn:hover{ border-color: var(--text-dim); }
+  button.btn.danger:hover{ border-color: var(--bad); color: var(--bad); }
+  button.btn.primary{ background: var(--accent); color: #0e0f14; border-color: var(--accent); font-weight: 600; }
+  button.btn.primary:hover{ opacity: 0.9; }
+  button.btn.link{ background: transparent; border-color: var(--border); }
 
   .broadcast-preview{
-    background: #06070a;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 10px 12px;
-    min-height: 60px;
-    font-size: 13px;
-    line-height: 1.6;
-    white-space: pre-wrap;
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; min-height: 60px; font-size: 13px; line-height: 1.7;
+    white-space: pre-wrap; font-family: 'JetBrains Mono', monospace;
+  }
+  .broadcast-preview .empty{ color: var(--text-faint); font-family: 'Inter', sans-serif; }
+
+  table{ width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td{ text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  td{ font-family: 'JetBrains Mono', monospace; }
+  td.role-cell{ font-family: 'Inter', sans-serif; font-weight: 600; }
+  th{ color: var(--text-faint); font-weight: 600; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.5px; }
+
+  .badge{ display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge.owner{ background: #b478ff22; color: #b478ff; }
+  .badge.dev{ background: var(--accent-soft); color: var(--accent); }
+  .badge.visitor{ background: var(--surface-2); color: var(--text-faint); }
+
+  .diag-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+  @media (max-width: 640px){
+    .diag-grid{ grid-template-columns: 1fr 1fr; }
+    .sidebar{ width: 72px; flex-basis: 72px; }
+    .sidebar .navlink span.label{ display: none; }
+    .brand .name, .brand .sub{ display: none; }
+    main{ padding: 20px 16px; }
   }
 
-  .broadcast-preview .empty{ color: var(--text-dim); }
+  .diag-item{ background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .diag-item .label{ color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .diag-item .value{ font-size: 17px; font-family: 'JetBrains Mono', monospace; margin-top: 3px; font-weight: 600; }
+  .diag-item .value.ok{ color: var(--good); }
+  .diag-item .value.bad{ color: var(--bad); }
 
-  table{
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-  }
-
-  th, td{
-    text-align: left;
-    padding: 6px 8px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  th{ color: var(--text-dim); font-weight: normal; text-transform: uppercase; font-size: 11px; }
-
-  .role-owner{ color: var(--purple); }
-  .role-dev{ color: var(--accent); }
-  .role-visitor{ color: var(--text-dim); }
-
-  .diag-grid{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  @media (max-width: 520px){
-    .diag-grid{ grid-template-columns: 1fr; }
-  }
-
-  .diag-item{
-    background: #0e100c;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 10px 12px;
-  }
-
-  .diag-item .label{ color: var(--text-dim); font-size: 11px; text-transform: uppercase; }
-  .diag-item .value{ font-size: 16px; margin-top: 2px; }
-  .diag-item .value.ok{ color: var(--accent); }
-  .diag-item .value.bad{ color: var(--red); }
-
-  .status-msg{ font-size: 12px; color: var(--text-dim); min-height: 1em; margin-top: 6px; }
-
-  .empty-note{ color: var(--text-dim); font-size: 13px; }
+  .status-msg{ font-size: 12px; color: var(--text-dim); min-height: 1em; margin-top: 8px; font-family: 'JetBrains Mono', monospace; word-break: break-all; }
+  .empty-note{ color: var(--text-faint); font-size: 13px; padding: 6px 0; }
 </style>
 </head>
 <body>
 
 <div class="gate" id="gate">
-  <h1>3STARSWIRL // DEV</h1>
+  <div class="mark">3S</div>
+  <h1>3STARSWIRL — Dev Access</h1>
+  <p>Enter your access key to continue</p>
   <input id="gateInput" type="text" placeholder="access key" autocomplete="off" spellcheck="false">
-  <button id="gateBtn" class="btn primary">enter</button>
+  <button id="gateBtn">Enter</button>
   <div class="err" id="gateErr"></div>
+
+  <div class="help-box">
+    <strong>Don't have a key?</strong>
+    If you already have dev access anywhere else, run <code>devaccess</code> at the main terminal (or the Tools tab here once you're in) to generate one. Otherwise, ask Lillith directly — keys aren't self-serve.
+  </div>
 </div>
 
 <div class="app" id="app">
-  <header>
-    <h1>3STARSWIRL // DEV DASHBOARD</h1>
-    <span class="ver">v0.1</span>
-  </header>
-
-  <nav>
-    <button data-tab="announce" class="active">announcements</button>
-    <button data-tab="active">active visitors</button>
-    <button data-tab="diag">diagnostics</button>
-    <button data-tab="tools">tools</button>
-  </nav>
-
-  <div class="panel show" id="panel-announce">
-    <div class="card">
-      <h2>live preview</h2>
-      <div class="broadcast-preview" id="broadcastPreview"><span class="empty">no active broadcast.</span></div>
-    </div>
-    <div class="card">
-      <h2>append a line</h2>
-      <div class="row">
-        <select id="annColor">
-          <option value="amber">amber</option>
-          <option value="red">red</option>
-          <option value="grey">grey</option>
-          <option value="purple">purple</option>
-          <option value="accent">accent</option>
-          <option value="hex">custom hex</option>
-        </select>
-        <input id="annHex" type="text" placeholder="#ff6bd6" style="display:none; width:110px;">
-      </div>
-      <div class="row">
-        <input id="annText" type="text" placeholder="broadcast text">
-        <button class="btn primary" id="annSend">post line</button>
-      </div>
-      <div class="row">
-        <button class="btn danger" id="annClear">end broadcast</button>
-      </div>
-      <div class="status-msg" id="annStatus"></div>
-    </div>
-  </div>
-
-  <div class="panel" id="panel-active">
-    <div class="card">
-      <h2>active right now <span id="activeCount" style="color:var(--text-dim);"></span></h2>
-      <table id="activeTable">
-        <thead><tr><th>role</th><th>ip</th><th>name</th><th>last ping</th></tr></thead>
-        <tbody></tbody>
-      </table>
-      <div class="empty-note" id="activeEmpty" style="display:none;">nobody active right now.</div>
-    </div>
-  </div>
-
-  <div class="panel" id="panel-diag">
-    <div class="card">
-      <h2>diagnostics</h2>
-      <div class="diag-grid" id="diagGrid"></div>
-    </div>
-  </div>
-
-  <div class="panel" id="panel-tools">
-    <div class="card">
-      <h2>generate dev-access link</h2>
-      <button class="btn primary" id="devAccessBtn">generate</button>
-      <div class="status-msg" id="devAccessStatus"></div>
-    </div>
-    <div class="card">
-      <h2>quick links</h2>
-      <div class="row">
-        <a class="btn" href="https://3starswirl.com" style="text-decoration:none; display:inline-block;">main site</a>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <div class="name">3STARSWIRL</div>
+        <div class="sub">Dev · v0.1</div>
       </div>
     </div>
-  </div>
+
+    <button class="navlink active" data-tab="announce"><span class="dot"></span><span class="label">Announcements</span></button>
+    <button class="navlink" data-tab="active"><span class="dot"></span><span class="label">Active Visitors</span></button>
+    <button class="navlink" data-tab="diag"><span class="dot"></span><span class="label">Diagnostics</span></button>
+    <button class="navlink" data-tab="tools"><span class="dot"></span><span class="label">Tools</span></button>
+
+    <div class="sidebar-footer">
+      <span class="pulse" id="statusPulse"></span>
+      <span id="statusText">checking&hellip;</span>
+    </div>
+  </aside>
+
+  <main>
+    <div class="panel show" id="panel-announce">
+      <div class="page-head">
+        <div>
+          <h1>Announcements</h1>
+          <p>Broadcasts appear live for anyone currently in the terminal.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Live Preview</h2>
+        <div class="broadcast-preview" id="broadcastPreview"><span class="empty">No active broadcast.</span></div>
+      </div>
+
+      <div class="card">
+        <h2>Append a Line</h2>
+        <div class="row">
+          <select id="annColor">
+            <option value="amber">Amber</option>
+            <option value="red">Red</option>
+            <option value="grey">Grey</option>
+            <option value="purple">Purple</option>
+            <option value="accent">Accent (green)</option>
+            <option value="hex">Custom hex&hellip;</option>
+          </select>
+          <input id="annHex" class="hexfield" type="text" placeholder="#ff6bd6" style="display:none;">
+        </div>
+        <div class="row">
+          <input id="annText" type="text" placeholder="Broadcast text">
+          <button class="btn primary" id="annSend">Post line</button>
+        </div>
+        <div class="row">
+          <button class="btn danger" id="annClear">End broadcast</button>
+        </div>
+        <div class="status-msg" id="annStatus"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-active">
+      <div class="page-head">
+        <div>
+          <h1>Active Visitors</h1>
+          <p>Live heartbeat, plus a rolling log of recent activity.</p>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Active Right Now</h2>
+        <table id="activeTable">
+          <thead><tr><th>Role</th><th>IP</th><th>Name</th><th>Last ping</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-note" id="activeEmpty" style="display:none;">Nobody active right now.</div>
+      </div>
+      <div class="card">
+        <h2>Recent Activity (last 10)</h2>
+        <table id="recentTable">
+          <thead><tr><th>Role</th><th>IP</th><th>Name</th><th>Last seen</th><th>Visits</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-note" id="recentEmpty" style="display:none;">No visitors logged yet.</div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-diag">
+      <div class="page-head">
+        <div>
+          <h1>Diagnostics</h1>
+          <p>System health at a glance.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="diag-grid" id="diagGrid"></div>
+      </div>
+      <div class="card">
+        <h2>Function Latency</h2>
+        <p class="hint">Round-trip time to the backend function, measured from your browser right now.</p>
+        <button class="btn" id="pingBtn">Ping</button>
+        <div class="status-msg" id="pingStatus"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-tools">
+      <div class="page-head">
+        <div>
+          <h1>Tools</h1>
+          <p>Quick actions and exports.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Generate Dev-Access Link</h2>
+        <button class="btn primary" id="devAccessBtn">Generate</button>
+        <div class="status-msg" id="devAccessStatus"></div>
+      </div>
+
+      <div class="card">
+        <h2>Export Visitor Log</h2>
+        <p class="hint">Downloads the full visitor history as a CSV file.</p>
+        <button class="btn" id="exportBtn">Export CSV</button>
+        <div class="status-msg" id="exportStatus"></div>
+      </div>
+
+      <div class="card">
+        <h2>Trigger Redeploy</h2>
+        <p class="hint">Kicks off a fresh Netlify deploy from the latest pushed commit. Requires a build hook to be configured (see below).</p>
+        <button class="btn danger" id="deployBtn">Trigger Deploy</button>
+        <div class="status-msg" id="deployStatus"></div>
+      </div>
+
+      <div class="card">
+        <h2>Quick Links</h2>
+        <div class="row">
+          <a class="btn link" href="https://3starswirl.com" style="text-decoration:none;">Main site →</a>
+          <a class="btn link" href="https://app.netlify.com" target="_blank" style="text-decoration:none;">Netlify dashboard →</a>
+        </div>
+      </div>
+    </div>
+  </main>
 </div>
 
 <script>
@@ -350,9 +407,7 @@
   }
 
   // ---------------------------------------------------------------
-  // gate — this page has its own localStorage (different origin from
-  // the main site), so it needs its own key check. Supports the same
-  // ?unlock=<key> URL pattern, or manual entry below.
+  // gate
   // ---------------------------------------------------------------
 
   const gate = document.getElementById('gate');
@@ -370,7 +425,7 @@
       initDashboard();
     } else {
       localStorage.removeItem('dev_owner_key');
-      gateErr.textContent = 'invalid key.';
+      gateErr.textContent = 'Invalid key.';
     }
   }
 
@@ -398,12 +453,12 @@
   })();
 
   // ---------------------------------------------------------------
-  // tabs
+  // nav
   // ---------------------------------------------------------------
 
-  document.querySelectorAll('nav button').forEach(btn => {
+  document.querySelectorAll('.navlink').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.navlink').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('show'));
       btn.classList.add('active');
       document.getElementById('panel-' + btn.dataset.tab).classList.add('show');
@@ -411,7 +466,7 @@
   });
 
   // ---------------------------------------------------------------
-  // announcements tab
+  // announcements
   // ---------------------------------------------------------------
 
   const annColor = document.getElementById('annColor');
@@ -421,19 +476,19 @@
   });
 
   function resolveColor(name){
-    if(name === 'grey') return 'var(--text-dim)';
-    if(name === 'purple') return 'var(--purple)';
-    if(name === 'red') return 'var(--red)';
-    if(name === 'accent') return 'var(--accent)';
+    if(name === 'grey') return '#8a8fa3';
+    if(name === 'purple') return '#b478ff';
+    if(name === 'red') return '#ff6b6b';
+    if(name === 'accent') return '#5bd6a0';
     if(/^#?[0-9a-fA-F]{3}$|^#?[0-9a-fA-F]{6}$/.test(name || '')) return name.startsWith('#') ? name : '#' + name;
-    return 'var(--amber)';
+    return '#ffcc4d';
   }
 
   async function refreshBroadcastPreview(){
     const data = await api({ getAnnouncement: true });
     const el = document.getElementById('broadcastPreview');
     if(!data.active || !data.lines || !data.lines.length){
-      el.innerHTML = '<span class="empty">no active broadcast.</span>';
+      el.innerHTML = '<span class="empty">No active broadcast.</span>';
       return;
     }
     el.innerHTML = data.lines.map(l =>
@@ -444,10 +499,10 @@
   document.getElementById('annSend').addEventListener('click', async () => {
     const text = document.getElementById('annText').value.trim();
     const status = document.getElementById('annStatus');
-    if(!text){ status.textContent = 'enter some text first.'; return; }
+    if(!text){ status.textContent = 'Enter some text first.'; return; }
     const color = annColor.value === 'hex' ? annHex.value.trim() : annColor.value;
     const data = await api({ setAnnouncement: true, text, color });
-    status.textContent = data.found ? 'posted.' : 'failed — check your key.';
+    status.textContent = data.found ? 'Posted.' : 'Failed — check your key.';
     if(data.found){
       document.getElementById('annText').value = '';
       refreshBroadcastPreview();
@@ -457,21 +512,19 @@
   document.getElementById('annClear').addEventListener('click', async () => {
     const status = document.getElementById('annStatus');
     const data = await api({ setAnnouncement: true, clear: true });
-    status.textContent = data.found ? 'broadcast ended.' : 'failed — check your key.';
+    status.textContent = data.found ? 'Broadcast ended.' : 'Failed — check your key.';
     refreshBroadcastPreview();
   });
 
   // ---------------------------------------------------------------
-  // active visitors tab
+  // active + recent visitors
   // ---------------------------------------------------------------
 
   async function refreshActive(){
     const data = await api({ activeVisitors: true });
     const tbody = document.querySelector('#activeTable tbody');
     const emptyNote = document.getElementById('activeEmpty');
-    const countEl = document.getElementById('activeCount');
     if(!data.found){ return; }
-    countEl.textContent = '(' + data.active.length + ')';
     tbody.innerHTML = '';
     if(!data.active.length){
       emptyNote.style.display = 'block';
@@ -481,7 +534,7 @@
     data.active.forEach(v => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="role-${v.role}">${v.role}</td>
+        <td class="role-cell"><span class="badge ${v.role}">${v.role}</span></td>
         <td>${v.ip}</td>
         <td>${(v.lastName || '').replace(/</g,'&lt;')}</td>
         <td>${v.lastPing || ''}</td>
@@ -490,21 +543,56 @@
     });
   }
 
+  async function refreshRecent(){
+    const data = await api({ whoSeen: true });
+    const tbody = document.querySelector('#recentTable tbody');
+    const emptyNote = document.getElementById('recentEmpty');
+    if(!data.found){ return; }
+    tbody.innerHTML = '';
+    const recent = data.visitors.slice(0, 10);
+    if(!recent.length){
+      emptyNote.style.display = 'block';
+      return;
+    }
+    emptyNote.style.display = 'none';
+    recent.forEach(v => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="role-cell"><span class="badge ${v.role}">${v.role}</span></td>
+        <td>${v.ip}</td>
+        <td>${(v.lastName || '').replace(/</g,'&lt;')}</td>
+        <td>${v.lastSeen || ''}</td>
+        <td>${v.visitCount || 0}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
   // ---------------------------------------------------------------
-  // diagnostics tab
+  // diagnostics + latency ping
   // ---------------------------------------------------------------
 
   async function refreshDiagnostics(){
     const data = await api({ diagnostics: true });
     const grid = document.getElementById('diagGrid');
-    if(!data.found){ grid.innerHTML = '<div class="empty-note">unable to load diagnostics.</div>'; return; }
+    const pulse = document.getElementById('statusPulse');
+    const statusText = document.getElementById('statusText');
+
+    if(!data.found){
+      grid.innerHTML = '<div class="empty-note">Unable to load diagnostics.</div>';
+      return;
+    }
+
+    pulse.classList.toggle('bad', !data.blobsOk);
+    statusText.textContent = data.blobsOk ? 'systems normal' : 'storage error';
+
     const items = [
-      ['blobs storage', data.blobsOk ? 'ok' : 'error', data.blobsOk],
-      ['total visitors', data.totalVisitors, true],
-      ['active now', data.activeNow, true],
-      ['site launched', data.launch ? new Date(data.launch).toLocaleDateString() : 'unknown', true],
-      ['names in table', data.nameCount, true],
-      ['dev keys in pool', data.devKeyCount, true]
+      ['Blobs storage', data.blobsOk ? 'OK' : 'Error', data.blobsOk],
+      ['Total visitors', data.totalVisitors, true],
+      ['Active now', data.activeNow, true],
+      ['Site launched', data.launch ? new Date(data.launch).toLocaleDateString() : 'unknown', true],
+      ['Names in table', data.nameCount, true],
+      ['Dev keys in pool', data.devKeyCount, true]
     ];
     grid.innerHTML = items.map(([label, value, ok]) => `
       <div class="diag-item">
@@ -514,20 +602,69 @@
     `).join('');
   }
 
+  document.getElementById('pingBtn').addEventListener('click', async () => {
+    const status = document.getElementById('pingStatus');
+    status.textContent = 'pinging…';
+    const start = performance.now();
+    const data = await api({ ping: true });
+    const elapsed = Math.round(performance.now() - start);
+    if(!data.ok){ status.textContent = 'ping failed.'; return; }
+    const skew = Date.now() - data.serverTime;
+    status.textContent = `${elapsed}ms round trip · clock skew ${skew}ms`;
+  });
+
   // ---------------------------------------------------------------
-  // tools tab
+  // tools
   // ---------------------------------------------------------------
 
   document.getElementById('devAccessBtn').addEventListener('click', async () => {
     const status = document.getElementById('devAccessStatus');
     const data = await api({ devAccess: true });
-    if(!data.found){ status.textContent = 'failed — check your key.'; return; }
+    if(!data.found){ status.textContent = 'Failed — check your key.'; return; }
     const url = 'https://3starswirl.com/?unlock=' + data.key;
     status.textContent = url;
   });
 
+  document.getElementById('exportBtn').addEventListener('click', async () => {
+    const status = document.getElementById('exportStatus');
+    const data = await api({ whoSeen: true });
+    if(!data.found || !data.visitors.length){
+      status.textContent = 'Nothing to export.';
+      return;
+    }
+    const header = 'ip,lastName,role,firstSeen,lastSeen,visitCount';
+    const escape = v => '"' + String(v).replace(/"/g, '""') + '"';
+    const rows = data.visitors.map(v =>
+      [v.ip, v.lastName, v.role, v.firstSeen, v.lastSeen, v.visitCount].map(escape).join(',')
+    );
+    const csv = [header].concat(rows).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `3starswirl-visitors-${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    status.textContent = `Exported ${data.visitors.length} record(s).`;
+  });
+
+  document.getElementById('deployBtn').addEventListener('click', async () => {
+    const status = document.getElementById('deployStatus');
+    status.textContent = 'triggering…';
+    const data = await api({ triggerDeploy: true });
+    if(data.found && data.triggered){
+      status.textContent = 'Deploy triggered.';
+    } else if(data.error){
+      status.textContent = 'Failed: ' + data.error;
+    } else {
+      status.textContent = 'Failed — check your key or build hook setup.';
+    }
+  });
+
   // ---------------------------------------------------------------
-  // init — no boot sequence, just load everything once verified
+  // init
   // ---------------------------------------------------------------
 
   let refreshIntervalId = null;
@@ -535,12 +672,14 @@
   function initDashboard(){
     refreshBroadcastPreview();
     refreshActive();
+    refreshRecent();
     refreshDiagnostics();
 
     if(refreshIntervalId !== null) clearInterval(refreshIntervalId);
     refreshIntervalId = setInterval(() => {
       refreshBroadcastPreview();
       refreshActive();
+      refreshRecent();
       refreshDiagnostics();
     }, 10000);
   }
