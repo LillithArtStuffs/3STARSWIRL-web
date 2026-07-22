@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3STARSWIRL — dev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0d0b;
+    --panel: #12150f;
+    --border: #23281f;
+    --text: #d7dbd7;
+    --text-dim: #6b756b;
+    --accent: #6fe08a;
+    --amber: #ffcc4d;
+    --red: #ff3b3b;
+    --purple: #b478ff;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  body{
+    font-family: 'JetBrains Mono', Consolas, 'SFMono-Regular', Menlo, monospace;
+    font-size: 14px;
+  }
+
+  /* ---- gate screen ---- */
+
+  .gate{
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+    padding: 20px;
+  }
+
+  .gate h1{
+    color: var(--accent);
+    font-size: 18px;
+    letter-spacing: 1px;
+    margin: 0;
+  }
+
+  .gate input{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 12px;
+    width: min(320px, 80vw);
+    border-radius: 4px;
+  }
+
+  .gate button{
+    background: var(--accent);
+    color: #06140b;
+    border: none;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 10px 18px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .gate .err{
+    color: var(--red);
+    font-size: 12px;
+    min-height: 1em;
+  }
+
+  /* ---- dashboard shell ---- */
+
+  .app{
+    display: none;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+
+  .app.show{ display: block; }
+
+  header{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  header h1{
+    color: var(--accent);
+    font-size: 17px;
+    margin: 0;
+    letter-spacing: 0.5px;
+  }
+
+  header .ver{
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+
+  nav{
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  nav button{
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 14px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+
+  nav button.active{
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .panel{ display: none; }
+  .panel.show{ display: block; }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+
+  .card h2{
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin: 0 0 10px 0;
+  }
+
+  .row{
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .row input, .row select{
+    background: #0e100c;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 4px;
+  }
+
+  .row input[type="text"]{ flex: 1; min-width: 160px; }
+
+  button.btn{
+    background: #1c2117;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button.btn:hover{ border-color: var(--accent); color: var(--accent); }
+  button.btn.danger:hover{ border-color: var(--red); color: var(--red); }
+  button.btn.primary{ background: var(--accent); color: #06140b; border-color: var(--accent); font-weight: 700; }
+
+  .broadcast-preview{
+    background: #06070a;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    min-height: 60px;
+    font-size: 13px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  .broadcast-preview .empty{ color: var(--text-dim); }
+
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  th, td{
+    text-align: left;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th{ color: var(--text-dim); font-weight: normal; text-transform: uppercase; font-size: 11px; }
+
+  .role-owner{ color: var(--purple); }
+  .role-dev{ color: var(--accent); }
+  .role-visitor{ color: var(--text-dim); }
+
+  .diag-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 520px){
+    .diag-grid{ grid-template-columns: 1fr; }
+  }
+
+  .diag-item{
+    background: #0e100c;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+  }
+
+  .diag-item .label{ color: var(--text-dim); font-size: 11px; text-transform: uppercase; }
+  .diag-item .value{ font-size: 16px; margin-top: 2px; }
+  .diag-item .value.ok{ color: var(--accent); }
+  .diag-item .value.bad{ color: var(--red); }
+
+  .status-msg{ font-size: 12px; color: var(--text-dim); min-height: 1em; margin-top: 6px; }
+
+  .empty-note{ color: var(--text-dim); font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <h1>3STARSWIRL // DEV</h1>
+  <input id="gateInput" type="text" placeholder="access key" autocomplete="off" spellcheck="false">
+  <button id="gateBtn" class="btn primary">enter</button>
+  <div class="err" id="gateErr"></div>
+</div>
+
+<div class="app" id="app">
+  <header>
+    <h1>3STARSWIRL // DEV DASHBOARD</h1>
+    <span class="ver">v0.1</span>
+  </header>
+
+  <nav>
+    <button data-tab="announce" class="active">announcements</button>
+    <button data-tab="active">active visitors</button>
+    <button data-tab="diag">diagnostics</button>
+    <button data-tab="tools">tools</button>
+  </nav>
+
+  <div class="panel show" id="panel-announce">
+    <div class="card">
+      <h2>live preview</h2>
+      <div class="broadcast-preview" id="broadcastPreview"><span class="empty">no active broadcast.</span></div>
+    </div>
+    <div class="card">
+      <h2>append a line</h2>
+      <div class="row">
+        <select id="annColor">
+          <option value="amber">amber</option>
+          <option value="red">red</option>
+          <option value="grey">grey</option>
+          <option value="purple">purple</option>
+          <option value="accent">accent</option>
+          <option value="hex">custom hex</option>
+        </select>
+        <input id="annHex" type="text" placeholder="#ff6bd6" style="display:none; width:110px;">
+      </div>
+      <div class="row">
+        <input id="annText" type="text" placeholder="broadcast text">
+        <button class="btn primary" id="annSend">post line</button>
+      </div>
+      <div class="row">
+        <button class="btn danger" id="annClear">end broadcast</button>
+      </div>
+      <div class="status-msg" id="annStatus"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-active">
+    <div class="card">
+      <h2>active right now <span id="activeCount" style="color:var(--text-dim);"></span></h2>
+      <table id="activeTable">
+        <thead><tr><th>role</th><th>ip</th><th>name</th><th>last ping</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="empty-note" id="activeEmpty" style="display:none;">nobody active right now.</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-diag">
+    <div class="card">
+      <h2>diagnostics</h2>
+      <div class="diag-grid" id="diagGrid"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-tools">
+    <div class="card">
+      <h2>generate dev-access link</h2>
+      <button class="btn primary" id="devAccessBtn">generate</button>
+      <div class="status-msg" id="devAccessStatus"></div>
+    </div>
+    <div class="card">
+      <h2>quick links</h2>
+      <div class="row">
+        <a class="btn" href="https://3starswirl.com" style="text-decoration:none; display:inline-block;">main site</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  const API = '/.netlify/functions/checkname';
+
+  function ownerKey(){ return localStorage.getItem('dev_owner_key') || ''; }
+
+  async function api(body){
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({ ownerKey: ownerKey() }, body))
+    });
+    return res.json();
+  }
+
+  // ---------------------------------------------------------------
+  // gate — this page has its own localStorage (different origin from
+  // the main site), so it needs its own key check. Supports the same
+  // ?unlock=<key> URL pattern, or manual entry below.
+  // ---------------------------------------------------------------
+
+  const gate = document.getElementById('gate');
+  const app = document.getElementById('app');
+  const gateInput = document.getElementById('gateInput');
+  const gateBtn = document.getElementById('gateBtn');
+  const gateErr = document.getElementById('gateErr');
+
+  async function tryKey(key){
+    localStorage.setItem('dev_owner_key', key);
+    const data = await api({ diagnostics: true });
+    if(data.found){
+      gate.style.display = 'none';
+      app.classList.add('show');
+      initDashboard();
+    } else {
+      localStorage.removeItem('dev_owner_key');
+      gateErr.textContent = 'invalid key.';
+    }
+  }
+
+  gateBtn.addEventListener('click', () => {
+    const key = gateInput.value.trim();
+    if(!key) return;
+    tryKey(key);
+  });
+  gateInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') gateBtn.click();
+  });
+
+  (async function boot(){
+    const params = new URLSearchParams(location.search);
+    const urlKey = params.get('unlock');
+    if(urlKey){
+      history.replaceState({}, '', location.pathname);
+      await tryKey(urlKey);
+      return;
+    }
+    const stored = ownerKey();
+    if(stored){
+      await tryKey(stored);
+    }
+  })();
+
+  // ---------------------------------------------------------------
+  // tabs
+  // ---------------------------------------------------------------
+
+  document.querySelectorAll('nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('show'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('show');
+    });
+  });
+
+  // ---------------------------------------------------------------
+  // announcements tab
+  // ---------------------------------------------------------------
+
+  const annColor = document.getElementById('annColor');
+  const annHex = document.getElementById('annHex');
+  annColor.addEventListener('change', () => {
+    annHex.style.display = annColor.value === 'hex' ? 'inline-block' : 'none';
+  });
+
+  function resolveColor(name){
+    if(name === 'grey') return 'var(--text-dim)';
+    if(name === 'purple') return 'var(--purple)';
+    if(name === 'red') return 'var(--red)';
+    if(name === 'accent') return 'var(--accent)';
+    if(/^#?[0-9a-fA-F]{3}$|^#?[0-9a-fA-F]{6}$/.test(name || '')) return name.startsWith('#') ? name : '#' + name;
+    return 'var(--amber)';
+  }
+
+  async function refreshBroadcastPreview(){
+    const data = await api({ getAnnouncement: true });
+    const el = document.getElementById('broadcastPreview');
+    if(!data.active || !data.lines || !data.lines.length){
+      el.innerHTML = '<span class="empty">no active broadcast.</span>';
+      return;
+    }
+    el.innerHTML = data.lines.map(l =>
+      `<div style="color:${resolveColor(l.color)}">${l.text.replace(/</g,'&lt;')}</div>`
+    ).join('');
+  }
+
+  document.getElementById('annSend').addEventListener('click', async () => {
+    const text = document.getElementById('annText').value.trim();
+    const status = document.getElementById('annStatus');
+    if(!text){ status.textContent = 'enter some text first.'; return; }
+    const color = annColor.value === 'hex' ? annHex.value.trim() : annColor.value;
+    const data = await api({ setAnnouncement: true, text, color });
+    status.textContent = data.found ? 'posted.' : 'failed — check your key.';
+    if(data.found){
+      document.getElementById('annText').value = '';
+      refreshBroadcastPreview();
+    }
+  });
+
+  document.getElementById('annClear').addEventListener('click', async () => {
+    const status = document.getElementById('annStatus');
+    const data = await api({ setAnnouncement: true, clear: true });
+    status.textContent = data.found ? 'broadcast ended.' : 'failed — check your key.';
+    refreshBroadcastPreview();
+  });
+
+  // ---------------------------------------------------------------
+  // active visitors tab
+  // ---------------------------------------------------------------
+
+  async function refreshActive(){
+    const data = await api({ activeVisitors: true });
+    const tbody = document.querySelector('#activeTable tbody');
+    const emptyNote = document.getElementById('activeEmpty');
+    const countEl = document.getElementById('activeCount');
+    if(!data.found){ return; }
+    countEl.textContent = '(' + data.active.length + ')';
+    tbody.innerHTML = '';
+    if(!data.active.length){
+      emptyNote.style.display = 'block';
+      return;
+    }
+    emptyNote.style.display = 'none';
+    data.active.forEach(v => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="role-${v.role}">${v.role}</td>
+        <td>${v.ip}</td>
+        <td>${(v.lastName || '').replace(/</g,'&lt;')}</td>
+        <td>${v.lastPing || ''}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // diagnostics tab
+  // ---------------------------------------------------------------
+
+  async function refreshDiagnostics(){
+    const data = await api({ diagnostics: true });
+    const grid = document.getElementById('diagGrid');
+    if(!data.found){ grid.innerHTML = '<div class="empty-note">unable to load diagnostics.</div>'; return; }
+    const items = [
+      ['blobs storage', data.blobsOk ? 'ok' : 'error', data.blobsOk],
+      ['total visitors', data.totalVisitors, true],
+      ['active now', data.activeNow, true],
+      ['site launched', data.launch ? new Date(data.launch).toLocaleDateString() : 'unknown', true],
+      ['names in table', data.nameCount, true],
+      ['dev keys in pool', data.devKeyCount, true]
+    ];
+    grid.innerHTML = items.map(([label, value, ok]) => `
+      <div class="diag-item">
+        <div class="label">${label}</div>
+        <div class="value ${ok ? 'ok' : 'bad'}">${value}</div>
+      </div>
+    `).join('');
+  }
+
+  // ---------------------------------------------------------------
+  // tools tab
+  // ---------------------------------------------------------------
+
+  document.getElementById('devAccessBtn').addEventListener('click', async () => {
+    const status = document.getElementById('devAccessStatus');
+    const data = await api({ devAccess: true });
+    if(!data.found){ status.textContent = 'failed — check your key.'; return; }
+    const url = 'https://3starswirl.com/?unlock=' + data.key;
+    status.textContent = url;
+  });
+
+  // ---------------------------------------------------------------
+  // init — no boot sequence, just load everything once verified
+  // ---------------------------------------------------------------
+
+  let refreshIntervalId = null;
+
+  function initDashboard(){
+    refreshBroadcastPreview();
+    refreshActive();
+    refreshDiagnostics();
+
+    if(refreshIntervalId !== null) clearInterval(refreshIntervalId);
+    refreshIntervalId = setInterval(() => {
+      refreshBroadcastPreview();
+      refreshActive();
+      refreshDiagnostics();
+    }, 10000);
+  }
+
+})();
+</script>
+
+</body>
+</html>
