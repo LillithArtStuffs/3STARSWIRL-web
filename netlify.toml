@@ -1,2 +1,9 @@
 [build]
   functions = "netlify/functions"
+
+[[redirects]]
+  from = "https://dev.3starswirl.com/*"
+  to = "/dev.html"
+  status = 200
+  force = true
+
