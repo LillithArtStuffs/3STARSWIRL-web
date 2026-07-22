@@ -579,6 +579,27 @@
   let lastSeenLineId = 0;
   let broadcastIntervalId = null;
 
+  // pings the server every 30s while someone's actually in the terminal,
+  // purely so the dev dashboard can tell "here right now" apart from
+  // "seen a while ago." Fire-and-forget, failure here shouldn't affect
+  // anything else on the page.
+  let heartbeatIntervalId = null;
+
+  function startHeartbeat(){
+    if(heartbeatIntervalId !== null){
+      clearInterval(heartbeatIntervalId);
+    }
+    const ping = () => {
+      fetch('/.netlify/functions/checkname', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ heartbeat: true })
+      }).catch(() => {});
+    };
+    ping();
+    heartbeatIntervalId = setInterval(ping, 30000);
+  }
+
   // builds a CSV and triggers an actual file download — used by
   // 'whoseen export'. runs entirely client-side, no server involved
   // beyond the data already fetched for the normal whoseen display.
@@ -1243,6 +1264,7 @@
 
     startIdleGlitchWatcher();
     startBroadcastWatcher();
+    startHeartbeat();
 
     inputRow.style.display = 'flex';
     cmdField.value = '';
