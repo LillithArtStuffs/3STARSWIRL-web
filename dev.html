@@ -5,20 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>3STARSWIRL — Dev</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #14161c;
-    --surface: #1b1e26;
-    --surface-2: #22252f;
-    --border: #2b2f3b;
-    --text: #e4e6ec;
-    --text-dim: #8a8fa3;
-    --text-faint: #565b6e;
-    --accent: #7c8cff;
-    --accent-soft: #7c8cff22;
-    --good: #5bd6a0;
-    --bad: #ff6b6b;
+    --paper: #eeece4;
+    --paper-2: #e4e1d6;
+    --ink: #1a1a17;
+    --ink-dim: #5c5a4f;
+    --ink-faint: #948f7d;
+    --rule: #1a1a17;
+    --hazard: #d9520c;
+    --hazard-dim: #a5410a;
+    --good: #2f6b3a;
+    --bad: #b3261e;
   }
 
   *{ box-sizing: border-box; }
@@ -27,15 +26,20 @@
     margin: 0;
     padding: 0;
     min-height: 100%;
-    background: var(--bg);
-    color: var(--text);
+    background: var(--paper);
+    color: var(--ink);
   }
 
   body{
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 14px;
-    -webkit-font-smoothing: antialiased;
+    font-family: 'JetBrains Mono', Consolas, monospace;
+    font-size: 13px;
+    background-image:
+      linear-gradient(var(--paper-2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--paper-2) 1px, transparent 1px);
+    background-size: 28px 28px;
   }
+
+  ::selection{ background: var(--hazard); color: var(--paper); }
 
   /* ---- gate screen ---- */
 
@@ -45,238 +49,301 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    gap: 18px;
+    gap: 16px;
     padding: 20px;
-    position: relative;
   }
 
-  .gate .mark{
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--accent), #4b56c9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .gate .stamp{
+    border: 3px solid var(--hazard);
+    color: var(--hazard);
+    padding: 6px 16px;
     font-weight: 700;
-    font-size: 16px;
-    color: #fff;
+    font-size: 13px;
+    letter-spacing: 2px;
+    transform: rotate(-2deg);
   }
 
-  .gate h1{ font-size: 15px; font-weight: 600; margin: 0; }
-  .gate p{ color: var(--text-dim); font-size: 13px; margin: -8px 0 0 0; }
+  .gate h1{
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.5px;
+  }
+
+  .gate p{
+    color: var(--ink-dim);
+    font-size: 12px;
+    margin: -6px 0 0 0;
+  }
 
   .gate input{
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
+    background: var(--paper);
+    border: 2px solid var(--rule);
+    color: var(--ink);
+    font-family: inherit;
     font-size: 13px;
-    padding: 11px 14px;
+    padding: 10px 13px;
     width: min(320px, 82vw);
-    border-radius: 8px;
-    outline: none;
   }
-  .gate input:focus{ border-color: var(--accent); }
+  .gate input:focus{ outline: 2px solid var(--hazard); outline-offset: -2px; }
 
   .gate button{
-    background: var(--accent);
-    color: #0e0f14;
-    border: none;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    font-size: 13px;
-    padding: 11px 22px;
-    border-radius: 8px;
+    background: var(--ink);
+    color: var(--paper);
+    border: 2px solid var(--ink);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 22px;
     cursor: pointer;
   }
-  .gate button:hover{ opacity: 0.9; }
-  .gate .err{ color: var(--bad); font-size: 12px; min-height: 1em; }
+  .gate button:hover{ background: var(--hazard); border-color: var(--hazard); }
+  .gate .err{ color: var(--bad); font-size: 12px; min-height: 1em; font-weight: 600; }
 
   .help-box{
     position: fixed;
     bottom: 20px;
     right: 20px;
     max-width: 260px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    font-size: 12px;
-    color: var(--text-dim);
+    background: var(--paper);
+    border: 2px solid var(--rule);
+    padding: 12px 14px;
+    font-size: 11.5px;
+    color: var(--ink-dim);
     line-height: 1.6;
   }
-
-  .help-box strong{ color: var(--text); display: block; margin-bottom: 6px; font-size: 12.5px; }
+  .help-box strong{
+    color: var(--ink);
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
 
   @media (max-width: 520px){
-    .help-box{ position: static; margin-top: 10px; max-width: min(320px, 82vw); }
+    .help-box{ position: static; margin-top: 4px; max-width: min(320px, 82vw); }
   }
 
   /* ---- app shell ---- */
 
   .app{ display: none; }
-  .app.show{ display: flex; min-height: 100vh; }
+  .app.show{ display: block; }
 
-  .sidebar{
-    width: 220px;
-    flex: 0 0 220px;
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    padding: 20px 14px;
+  header.top{
+    border-bottom: 3px solid var(--rule);
+    padding: 14px 24px;
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: var(--paper);
   }
 
-  .brand{ display: flex; align-items: center; gap: 10px; padding: 6px 10px 20px 10px; }
-  .brand .mark{ width: 26px; height: 26px; border-radius: 7px; background: linear-gradient(135deg, var(--accent), #4b56c9); flex: 0 0 auto; }
-  .brand .name{ font-weight: 700; font-size: 13px; letter-spacing: 0.3px; }
-  .brand .sub{ font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1px; }
-
-  .navlink{
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 10px; border-radius: 7px;
-    color: var(--text-dim); font-size: 13px; font-weight: 500;
-    cursor: pointer; border: none; background: transparent;
-    text-align: left; width: 100%; font-family: inherit;
-  }
-  .navlink:hover{ background: var(--surface-2); color: var(--text); }
-  .navlink.active{ background: var(--accent-soft); color: var(--accent); }
-  .navlink .dot{ width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.7; flex: 0 0 auto; }
-
-  .sidebar-footer{
-    margin-top: auto; padding: 10px; font-size: 11px; color: var(--text-faint);
-    display: flex; align-items: center; gap: 7px;
+  header.top .title{
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 1px;
   }
 
-  .pulse{ width: 7px; height: 7px; border-radius: 50%; background: var(--good); flex: 0 0 auto; position: relative; }
-  .pulse::after{
-    content: ''; position: absolute; inset: 0; border-radius: 50%;
-    background: var(--good); animation: pulse-ring 1.8s ease-out infinite;
-  }
-  .pulse.bad{ background: var(--bad); }
-  .pulse.bad::after{ background: var(--bad); }
+  header.top .title .hazard-text{ color: var(--hazard); }
 
-  @keyframes pulse-ring{
-    0%{ transform: scale(1); opacity: 0.6; }
-    100%{ transform: scale(2.6); opacity: 0; }
+  header.top .status{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
-  main{ flex: 1; padding: 28px 32px; max-width: 880px; }
+  .stamp-badge{
+    border: 2px solid currentColor;
+    padding: 2px 9px;
+    font-weight: 700;
+    font-size: 10.5px;
+    letter-spacing: 1px;
+  }
+  .stamp-badge.ok{ color: var(--good); }
+  .stamp-badge.bad{ color: var(--bad); }
 
-  .page-head{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; flex-wrap: wrap; gap: 8px; }
-  .page-head h1{ font-size: 19px; font-weight: 700; margin: 0 0 3px 0; }
-  .page-head p{ color: var(--text-dim); font-size: 13px; margin: 0; }
+  nav.tabs{
+    display: flex;
+    border-bottom: 3px solid var(--rule);
+    background: var(--paper-2);
+    overflow-x: auto;
+  }
+
+  nav.tabs button{
+    background: transparent;
+    border: none;
+    border-right: 2px solid var(--rule);
+    color: var(--ink-dim);
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 11px 18px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  nav.tabs button:hover{ color: var(--ink); }
+  nav.tabs button.active{ background: var(--ink); color: var(--paper); }
+
+  main{
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 26px 24px 60px;
+  }
 
   .panel{ display: none; }
   .panel.show{ display: block; }
 
-  .card{ background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
-  .card h2{ font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-faint); font-weight: 600; margin: 0 0 14px 0; }
-  .card p.hint{ font-size: 12px; color: var(--text-faint); margin: -8px 0 12px 0; }
+  .page-head{ margin-bottom: 18px; }
+  .page-head h1{ font-size: 16px; font-weight: 700; margin: 0 0 4px 0; letter-spacing: 0.5px; }
+  .page-head p{ color: var(--ink-dim); font-size: 12px; margin: 0; }
+
+  .card{
+    background: var(--paper);
+    border: 2px solid var(--rule);
+    padding: 16px 18px;
+    margin-bottom: 16px;
+  }
+
+  .card h2{
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--ink);
+    font-weight: 700;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--rule);
+  }
+
+  .card p.hint{ font-size: 11.5px; color: var(--ink-faint); margin: -6px 0 12px 0; }
 
   .row{ display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+
   .row input, .row select{
-    background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
-    font-family: inherit; font-size: 13px; padding: 9px 11px; border-radius: 7px; outline: none;
+    background: var(--paper);
+    border: 2px solid var(--rule);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 12.5px;
+    padding: 8px 10px;
   }
-  .row input:focus, .row select:focus{ border-color: var(--accent); }
+  .row input:focus, .row select:focus{ outline: 2px solid var(--hazard); outline-offset: -2px; }
   .row input[type="text"]{ flex: 1; min-width: 160px; }
-  .row .hexfield{ font-family: 'JetBrains Mono', monospace; width: 110px; }
+  .row .hexfield{ width: 110px; }
 
   button.btn{
-    background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
-    font-family: inherit; font-weight: 500; font-size: 13px; padding: 9px 16px; border-radius: 7px; cursor: pointer;
+    background: var(--paper);
+    border: 2px solid var(--rule);
+    color: var(--ink);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 9px 16px;
+    cursor: pointer;
   }
-  button.btn:hover{ border-color: var(--text-dim); }
-  button.btn.danger:hover{ border-color: var(--bad); color: var(--bad); }
-  button.btn.primary{ background: var(--accent); color: #0e0f14; border-color: var(--accent); font-weight: 600; }
-  button.btn.primary:hover{ opacity: 0.9; }
-  button.btn.link{ background: transparent; border-color: var(--border); }
+  button.btn:hover{ background: var(--ink); color: var(--paper); }
+  button.btn.danger{ border-color: var(--bad); color: var(--bad); }
+  button.btn.danger:hover{ background: var(--bad); color: var(--paper); }
+  button.btn.primary{ background: var(--hazard); color: var(--paper); border-color: var(--hazard); }
+  button.btn.primary:hover{ background: var(--hazard-dim); border-color: var(--hazard-dim); }
+  button.btn.link{ text-decoration: none; display: inline-block; }
 
   .broadcast-preview{
-    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
-    padding: 14px 16px; min-height: 60px; font-size: 13px; line-height: 1.7;
-    white-space: pre-wrap; font-family: 'JetBrains Mono', monospace;
+    background: var(--paper-2);
+    border: 2px dashed var(--ink-faint);
+    padding: 12px 14px;
+    min-height: 56px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    white-space: pre-wrap;
   }
-  .broadcast-preview .empty{ color: var(--text-faint); font-family: 'Inter', sans-serif; }
+  .broadcast-preview .empty{ color: var(--ink-faint); font-style: italic; }
 
-  table{ width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  th, td{ text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
-  td{ font-family: 'JetBrains Mono', monospace; }
-  td.role-cell{ font-family: 'Inter', sans-serif; font-weight: 600; }
-  th{ color: var(--text-faint); font-weight: 600; text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.5px; }
+  table{ width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td{ text-align: left; padding: 8px 9px; border-bottom: 1px solid var(--ink-faint); }
+  th{ color: var(--ink-dim); font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.6px; border-bottom: 2px solid var(--rule); }
 
-  .badge{ display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-  .badge.owner{ background: #b478ff22; color: #b478ff; }
-  .badge.dev{ background: var(--accent-soft); color: var(--accent); }
-  .badge.visitor{ background: var(--surface-2); color: var(--text-faint); }
+  .role-tag{
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1px 7px;
+    border: 1.5px solid currentColor;
+  }
+  .role-tag.owner{ color: #6b3fa0; }
+  .role-tag.dev{ color: var(--hazard); }
+  .role-tag.visitor{ color: var(--ink-faint); }
 
-  .diag-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .diag-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 2px solid var(--rule); }
 
   @media (max-width: 640px){
     .diag-grid{ grid-template-columns: 1fr 1fr; }
-    .sidebar{ width: 72px; flex-basis: 72px; }
-    .sidebar .navlink span.label{ display: none; }
-    .brand .name, .brand .sub{ display: none; }
-    main{ padding: 20px 16px; }
+    main{ padding: 20px 14px 50px; }
   }
 
-  .diag-item{ background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
-  .diag-item .label{ color: var(--text-faint); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.4px; }
-  .diag-item .value{ font-size: 17px; font-family: 'JetBrains Mono', monospace; margin-top: 3px; font-weight: 600; }
+  .diag-item{
+    padding: 12px 14px;
+    border-right: 1px solid var(--ink-faint);
+    border-bottom: 1px solid var(--ink-faint);
+  }
+  .diag-item .label{ color: var(--ink-faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .diag-item .value{ font-size: 18px; font-weight: 700; margin-top: 3px; }
   .diag-item .value.ok{ color: var(--good); }
   .diag-item .value.bad{ color: var(--bad); }
 
-  .status-msg{ font-size: 12px; color: var(--text-dim); min-height: 1em; margin-top: 8px; font-family: 'JetBrains Mono', monospace; word-break: break-all; }
-  .empty-note{ color: var(--text-faint); font-size: 13px; padding: 6px 0; }
+  .status-msg{ font-size: 11.5px; color: var(--ink-dim); min-height: 1em; margin-top: 8px; word-break: break-all; }
+  .empty-note{ color: var(--ink-faint); font-size: 12.5px; padding: 6px 0; font-style: italic; }
 </style>
 </head>
 <body>
 
 <div class="gate" id="gate">
-  <div class="mark">3S</div>
-  <h1>3STARSWIRL — Dev Access</h1>
-  <p>Enter your access key to continue</p>
+  <div class="stamp">3STARSWIRL // DEV</div>
+  <h1>ACCESS REQUIRED</h1>
+  <p>Enter your key to continue</p>
   <input id="gateInput" type="text" placeholder="access key" autocomplete="off" spellcheck="false">
   <button id="gateBtn">Enter</button>
   <div class="err" id="gateErr"></div>
 
   <div class="help-box">
-    <strong>Don't have a key?</strong>
-    If you already have dev access anywhere else, run <code>devaccess</code> at the main terminal (or the Tools tab here once you're in) to generate one. Otherwise, ask Lillith directly — keys aren't self-serve.
+    <strong>No key?</strong>
+    If you already have dev access, run <code>devaccess</code> at the main terminal (or the Tools tab once you're in) to generate one. Otherwise, ask Lillith directly — keys aren't self-serve.
   </div>
 </div>
 
 <div class="app" id="app">
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="mark"></div>
-      <div>
-        <div class="name">3STARSWIRL</div>
-        <div class="sub">Dev · v0.1</div>
-      </div>
+  <header class="top">
+    <div class="title">3STARSWIRL <span class="hazard-text">// DEV</span> &nbsp;<span style="color:var(--ink-faint); font-weight:400;">v0.1</span></div>
+    <div class="status">
+      <span id="statusBadge" class="stamp-badge ok">CHECKING</span>
     </div>
+  </header>
 
-    <button class="navlink active" data-tab="announce"><span class="dot"></span><span class="label">Announcements</span></button>
-    <button class="navlink" data-tab="active"><span class="dot"></span><span class="label">Active Visitors</span></button>
-    <button class="navlink" data-tab="diag"><span class="dot"></span><span class="label">Diagnostics</span></button>
-    <button class="navlink" data-tab="tools"><span class="dot"></span><span class="label">Tools</span></button>
-
-    <div class="sidebar-footer">
-      <span class="pulse" id="statusPulse"></span>
-      <span id="statusText">checking&hellip;</span>
-    </div>
-  </aside>
+  <nav class="tabs">
+    <button data-tab="announce" class="active">Announcements</button>
+    <button data-tab="active">Active Visitors</button>
+    <button data-tab="diag">Diagnostics</button>
+    <button data-tab="tools">Tools</button>
+  </nav>
 
   <main>
     <div class="panel show" id="panel-announce">
       <div class="page-head">
-        <div>
-          <h1>Announcements</h1>
-          <p>Broadcasts appear live for anyone currently in the terminal.</p>
-        </div>
+        <h1>Announcements</h1>
+        <p>Broadcasts appear live for anyone currently in the terminal.</p>
       </div>
 
       <div class="card">
@@ -310,10 +377,8 @@
 
     <div class="panel" id="panel-active">
       <div class="page-head">
-        <div>
-          <h1>Active Visitors</h1>
-          <p>Live heartbeat, plus a rolling log of recent activity.</p>
-        </div>
+        <h1>Active Visitors</h1>
+        <p>Live heartbeat, plus a rolling log of recent activity.</p>
       </div>
       <div class="card">
         <h2>Active Right Now</h2>
@@ -335,10 +400,8 @@
 
     <div class="panel" id="panel-diag">
       <div class="page-head">
-        <div>
-          <h1>Diagnostics</h1>
-          <p>System health at a glance.</p>
-        </div>
+        <h1>Diagnostics</h1>
+        <p>System health at a glance.</p>
       </div>
       <div class="card">
         <div class="diag-grid" id="diagGrid"></div>
@@ -353,10 +416,8 @@
 
     <div class="panel" id="panel-tools">
       <div class="page-head">
-        <div>
-          <h1>Tools</h1>
-          <p>Quick actions and exports.</p>
-        </div>
+        <h1>Tools</h1>
+        <p>Quick actions and exports.</p>
       </div>
 
       <div class="card">
@@ -374,7 +435,7 @@
 
       <div class="card">
         <h2>Trigger Redeploy</h2>
-        <p class="hint">Kicks off a fresh Netlify deploy from the latest pushed commit. Requires a build hook to be configured (see below).</p>
+        <p class="hint">Kicks off a fresh Netlify deploy from the latest pushed commit. Requires a build hook to be configured.</p>
         <button class="btn danger" id="deployBtn">Trigger Deploy</button>
         <div class="status-msg" id="deployStatus"></div>
       </div>
@@ -382,8 +443,8 @@
       <div class="card">
         <h2>Quick Links</h2>
         <div class="row">
-          <a class="btn link" href="https://3starswirl.com" style="text-decoration:none;">Main site →</a>
-          <a class="btn link" href="https://app.netlify.com" target="_blank" style="text-decoration:none;">Netlify dashboard →</a>
+          <a class="btn link" href="https://3starswirl.com">Main site &rarr;</a>
+          <a class="btn link" href="https://app.netlify.com" target="_blank">Netlify dashboard &rarr;</a>
         </div>
       </div>
     </div>
@@ -453,12 +514,12 @@
   })();
 
   // ---------------------------------------------------------------
-  // nav
+  // tabs
   // ---------------------------------------------------------------
 
-  document.querySelectorAll('.navlink').forEach(btn => {
+  document.querySelectorAll('nav.tabs button').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.navlink').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('show'));
       btn.classList.add('active');
       document.getElementById('panel-' + btn.dataset.tab).classList.add('show');
@@ -476,12 +537,12 @@
   });
 
   function resolveColor(name){
-    if(name === 'grey') return '#8a8fa3';
-    if(name === 'purple') return '#b478ff';
-    if(name === 'red') return '#ff6b6b';
-    if(name === 'accent') return '#5bd6a0';
+    if(name === 'grey') return '#8a8570';
+    if(name === 'purple') return '#6b3fa0';
+    if(name === 'red') return '#b3261e';
+    if(name === 'accent') return '#2f6b3a';
     if(/^#?[0-9a-fA-F]{3}$|^#?[0-9a-fA-F]{6}$/.test(name || '')) return name.startsWith('#') ? name : '#' + name;
-    return '#ffcc4d';
+    return '#d9520c';
   }
 
   async function refreshBroadcastPreview(){
@@ -492,7 +553,7 @@
       return;
     }
     el.innerHTML = data.lines.map(l =>
-      `<div style="color:${resolveColor(l.color)}">${l.text.replace(/</g,'&lt;')}</div>`
+      `<div style="color:${resolveColor(l.color)}; font-weight:600;">${l.text.replace(/</g,'&lt;')}</div>`
     ).join('');
   }
 
@@ -534,7 +595,7 @@
     data.active.forEach(v => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="role-cell"><span class="badge ${v.role}">${v.role}</span></td>
+        <td><span class="role-tag ${v.role}">${v.role}</span></td>
         <td>${v.ip}</td>
         <td>${(v.lastName || '').replace(/</g,'&lt;')}</td>
         <td>${v.lastPing || ''}</td>
@@ -558,7 +619,7 @@
     recent.forEach(v => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="role-cell"><span class="badge ${v.role}">${v.role}</span></td>
+        <td><span class="role-tag ${v.role}">${v.role}</span></td>
         <td>${v.ip}</td>
         <td>${(v.lastName || '').replace(/</g,'&lt;')}</td>
         <td>${v.lastSeen || ''}</td>
@@ -575,16 +636,16 @@
   async function refreshDiagnostics(){
     const data = await api({ diagnostics: true });
     const grid = document.getElementById('diagGrid');
-    const pulse = document.getElementById('statusPulse');
-    const statusText = document.getElementById('statusText');
+    const badge = document.getElementById('statusBadge');
 
     if(!data.found){
       grid.innerHTML = '<div class="empty-note">Unable to load diagnostics.</div>';
       return;
     }
 
-    pulse.classList.toggle('bad', !data.blobsOk);
-    statusText.textContent = data.blobsOk ? 'systems normal' : 'storage error';
+    badge.textContent = data.blobsOk ? 'ONLINE' : 'ERROR';
+    badge.classList.toggle('ok', data.blobsOk);
+    badge.classList.toggle('bad', !data.blobsOk);
 
     const items = [
       ['Blobs storage', data.blobsOk ? 'OK' : 'Error', data.blobsOk],
