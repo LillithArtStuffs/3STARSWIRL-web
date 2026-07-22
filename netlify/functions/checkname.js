@@ -333,6 +333,52 @@ exports.handler = async (event) => {
   const role = roleForKey(ownerKey);
   const isOwner = role !== 'visitor';
 
+  // public — no owner check. bare-minimum round trip for measuring real
+  // latency from the dashboard, plus a server timestamp for clock-skew
+  // sanity checks.
+  if (body.ping) {
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ok: true, serverTime: Date.now() })
+    };
+  }
+
+  // owner-only: trigger a Netlify redeploy via a build hook. The actual
+  // build hook URL lives only in an env var, never in any file — this
+  // is the one place it's used, server-side only.
+  if (body.triggerDeploy) {
+    if (!isOwner) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: false })
+      };
+    }
+    const hookUrl = process.env.NETLIFY_BUILD_HOOK_URL;
+    if (!hookUrl) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: false, error: 'NETLIFY_BUILD_HOOK_URL not set' })
+      };
+    }
+    try {
+      const resp = await fetch(hookUrl, { method: 'POST' });
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: true, triggered: resp.ok })
+      };
+    } catch (e) {
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ found: false, error: e.message })
+      };
+    }
+  }
+
   // public — no owner check. anyone actively in the terminal pings this
   // periodically so the dashboard can show who's here right now.
   if (body.heartbeat) {
