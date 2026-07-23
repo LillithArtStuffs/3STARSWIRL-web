@@ -3,31 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>...</title>
+
+  <title>3STARSWIRL — Down for 0.3</title>
+
+  <meta property="og:title" content="3STARSWIRL — Down for 0.3">
+  <meta property="og:description" content="Version 0.3 is in the works. Be patient.">
+  <meta property="og:type" content="website">
+
+  <meta name="description" content="Version 0.3 is in the works. Be patient.">
+  <meta name="theme-color" content="#ffffff">
 </head>
-<body style="background:white;color:black;font-family:serif;">
+
+<body style="background:white;color:black;font-family:sans-serif;">
   <div id="text"></div>
 
   <script>
     const text = document.getElementById("text");
 
-    const lines = [
-      { text: "it’s over", delay: 0 },
-      { text: "you can go home now", delay: 1500 },
-      { text: "bye", delay: 3000 },
-      { text: "why are you still here", delay: 33000 }, // ~30 second pause
-      { text: "it’s over", delay: 34500 },
-      { text: "goodbye for real", delay: 36000 }
+    const messages = [
+      { text: "down for maintenance", delay: 0 },
+      { text: "be patient", delay: 1500 },
+      { text: "version 0.3 in the works", delay: 3000 },
+
+      { text: "why are you still here?", delay: 13000 },
+      { text: "updates take time, now go enjoy yours", delay: 14500 }
     ];
 
-    lines.forEach(line => {
+    messages.forEach(msg => {
       setTimeout(() => {
-        text.innerHTML += line.text + "<br>";
-      }, line.delay);
+        text.innerHTML += `<p>${msg.text}</p>`;
+      }, msg.delay);
     });
 
-    // Try to close the tab after the final message.
-    // If that isn't allowed by the browser, go to about:blank.
     setTimeout(() => {
       window.close();
 
@@ -36,7 +43,7 @@
           location.replace("about:blank");
         }
       }, 500);
-    }, 38000);
+    }, 17000);
   </script>
 </body>
 </html>
