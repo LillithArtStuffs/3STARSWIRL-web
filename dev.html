@@ -4,481 +4,264 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>3STARSWIRL — Dev</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg: #0a0c10;
-    --surface: #12151b;
-    --surface-2: #181c24;
-    --border: #262b35;
-    --text: #e8eaed;
-    --text-dim: #838a99;
-    --text-faint: #4d5566;
-    --restricted: #e5484d;
-    --restricted-dim: #b23a3e;
-    --clear: #3fb950;
-    --amber: #d29922;
-  }
-
-  *{ box-sizing: border-box; }
-
-  html, body{
+  * { box-sizing: border-box; }
+  body {
+    font-family: Consolas, Menlo, monospace;
+    font-size: 14px;
+    background: #fff;
+    color: #111;
     margin: 0;
     padding: 0;
-    min-height: 100%;
-    background: var(--bg);
-    color: var(--text);
   }
-
-  body{
-    font-family: 'Inter', -apple-system, sans-serif;
-    font-size: 13.5px;
+  a { color: #111; }
+  .gate {
+    max-width: 360px;
+    margin: 80px auto;
+    padding: 0 20px;
   }
-
-  .mono{ font-family: 'JetBrains Mono', Consolas, monospace; }
-
-  /* ---- classified banner ---- */
-
-  .banner{
-    background: var(--restricted);
-    color: #1a0505;
-    text-align: center;
-    padding: 5px 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+  .gate h1 { font-size: 16px; margin-bottom: 4px; }
+  .gate p { color: #555; font-size: 13px; margin-top: 0; }
+  .gate input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px;
+    border: 1px solid #999;
+    margin-bottom: 8px;
   }
-
-  /* ---- gate screen ---- */
-
-  .gate{
-    min-height: calc(100vh - 28px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 16px;
-    padding: 20px;
-  }
-
-  .gate .mark{
-    border: 1.5px solid var(--restricted);
-    color: var(--restricted);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    padding: 5px 14px;
-    text-transform: uppercase;
-  }
-
-  .gate h1{ font-size: 16px; font-weight: 700; margin: 0; }
-  .gate p{ color: var(--text-dim); font-size: 12.5px; margin: -6px 0 0 0; }
-
-  .gate input{
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
+  .gate button {
+    font-family: inherit;
     font-size: 13px;
-    padding: 11px 14px;
-    width: min(320px, 82vw);
-    border-radius: 3px;
-    outline: none;
-  }
-  .gate input:focus{ border-color: var(--restricted); }
-
-  .gate button{
-    background: var(--text);
-    color: var(--bg);
-    border: none;
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: 12.5px;
-    letter-spacing: 0.3px;
-    padding: 11px 24px;
-    border-radius: 3px;
+    padding: 8px 16px;
+    border: 1px solid #111;
+    background: #111;
+    color: #fff;
     cursor: pointer;
   }
-  .gate button:hover{ background: var(--restricted); color: #fff; }
-  .gate .err{ color: var(--restricted); font-size: 12px; min-height: 1em; font-weight: 600; }
-
-  .help-box{
-    position: fixed;
-    bottom: 18px;
-    right: 18px;
-    max-width: 250px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 13px 15px;
-    font-size: 11.5px;
-    color: var(--text-dim);
-    line-height: 1.55;
+  .gate .err { color: #b00; font-size: 12px; min-height: 1em; margin-top: 6px; }
+  .help {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #ccc;
+    font-size: 12px;
+    color: #555;
   }
-  .help-box strong{
-    color: var(--text);
-    display: block;
-    margin-bottom: 5px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-  }
-  .help-box code{ color: var(--amber); font-family: 'JetBrains Mono', monospace; }
+  .help strong { color: #111; display: block; margin-bottom: 4px; }
 
-  @media (max-width: 520px){
-    .help-box{ position: static; margin-top: 6px; max-width: min(320px, 82vw); }
-  }
+  .app { display: none; }
+  .app.show { display: block; }
 
-  /* ---- app shell ---- */
-
-  .app{ display: none; }
-  .app.show{ display: block; }
-
-  header.top{
-    border-bottom: 1px solid var(--border);
-    padding: 14px 24px;
+  header {
+    border-bottom: 1px solid #111;
+    padding: 12px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
-    background: var(--surface);
   }
+  header .title { font-weight: bold; font-size: 14px; }
+  header .status { font-size: 12px; color: #555; }
 
-  header.top .title{
-    font-weight: 700;
-    font-size: 13.5px;
-    letter-spacing: 0.3px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+  nav {
+    border-bottom: 1px solid #ccc;
+    padding: 0 20px;
   }
-
-  header.top .title .badge-tag{
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: var(--restricted);
-    border: 1px solid var(--restricted-dim);
-    padding: 2px 8px;
-    border-radius: 3px;
-  }
-
-  header.top .ver{ color: var(--text-faint); font-size: 11px; font-family: 'JetBrains Mono', monospace; }
-
-  .status-pill{
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 10.5px;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    border: 1px solid var(--border);
-    padding: 4px 10px;
-    border-radius: 3px;
-  }
-  .status-pill .dot{ width: 6px; height: 6px; border-radius: 50%; background: var(--clear); }
-  .status-pill.bad .dot{ background: var(--restricted); }
-  .status-pill.bad{ color: var(--restricted); border-color: var(--restricted-dim); }
-
-  nav.tabs{
-    display: flex;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg);
-    overflow-x: auto;
-    padding: 0 24px;
-  }
-
-  nav.tabs button{
-    background: transparent;
-    border: none;
+  nav a {
+    display: inline-block;
+    padding: 10px 12px;
+    font-size: 13px;
+    text-decoration: none;
+    color: #555;
     border-bottom: 2px solid transparent;
-    color: var(--text-dim);
-    font-family: 'Inter', sans-serif;
-    font-size: 12.5px;
-    font-weight: 600;
-    padding: 13px 16px;
     cursor: pointer;
-    white-space: nowrap;
   }
-  nav.tabs button:hover{ color: var(--text); }
-  nav.tabs button.active{ color: var(--text); border-bottom-color: var(--restricted); }
+  nav a.active { color: #111; border-bottom-color: #111; }
 
-  main{
-    max-width: 880px;
-    margin: 0 auto;
-    padding: 26px 24px 60px;
+  main { max-width: 760px; margin: 0 auto; padding: 20px; }
+  .panel { display: none; }
+  .panel.show { display: block; }
+
+  section {
+    border: 1px solid #ccc;
+    padding: 14px 16px;
+    margin-bottom: 14px;
   }
-
-  .panel{ display: none; }
-  .panel.show{ display: block; }
-
-  .page-head{ margin-bottom: 18px; }
-  .page-head h1{ font-size: 17px; font-weight: 700; margin: 0 0 4px 0; }
-  .page-head p{ color: var(--text-dim); font-size: 12.5px; margin: 0; }
-
-  .card{
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 17px 19px;
-    margin-bottom: 15px;
-  }
-
-  .card h2{
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-faint);
-    font-weight: 700;
-    margin: 0 0 13px 0;
-  }
-
-  .card p.hint{ font-size: 11.5px; color: var(--text-faint); margin: -6px 0 12px 0; }
-
-  .row{ display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
-
-  .row input, .row select{
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-size: 12.5px;
-    padding: 8px 11px;
-    border-radius: 5px;
-    outline: none;
-  }
-  .row input:focus, .row select:focus{ border-color: var(--restricted); }
-  .row input[type="text"]{ flex: 1; min-width: 160px; }
-  .row .hexfield{ font-family: 'JetBrains Mono', monospace; width: 110px; }
-
-  button.btn{
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
+  section h2 {
     font-size: 12px;
-    padding: 8px 15px;
-    border-radius: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #555;
+    margin: 0 0 10px 0;
+    font-weight: normal;
+  }
+  section p.hint { font-size: 12px; color: #777; margin: -4px 0 10px 0; }
+
+  .row { margin-bottom: 8px; }
+  .row input, .row select {
+    font-family: inherit;
+    font-size: 13px;
+    padding: 6px 8px;
+    border: 1px solid #999;
+    margin-right: 6px;
+  }
+  .row input[type="text"] { width: 260px; max-width: 60%; }
+
+  button {
+    font-family: inherit;
+    font-size: 12.5px;
+    padding: 6px 12px;
+    border: 1px solid #111;
+    background: #fff;
+    color: #111;
     cursor: pointer;
   }
-  button.btn:hover{ border-color: var(--text-dim); }
-  button.btn.danger{ border-color: var(--restricted-dim); color: var(--restricted); }
-  button.btn.danger:hover{ background: var(--restricted); color: #fff; border-color: var(--restricted); }
-  button.btn.primary{ background: var(--text); color: var(--bg); border-color: var(--text); }
-  button.btn.primary:hover{ background: var(--restricted); color: #fff; border-color: var(--restricted); }
-  button.btn.link{ text-decoration: none; display: inline-block; }
-  button.btn.small{ padding: 4px 9px; font-size: 10.5px; }
+  button:hover { background: #111; color: #fff; }
+  button.primary { background: #111; color: #fff; }
+  button.primary:hover { background: #333; }
 
-  .broadcast-preview{
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 13px 15px;
-    min-height: 56px;
-    font-size: 12.5px;
-    line-height: 1.7;
+  pre.preview {
+    border: 1px dashed #999;
+    padding: 10px 12px;
+    font-size: 13px;
     white-space: pre-wrap;
-    font-family: 'JetBrains Mono', monospace;
+    margin: 0;
+    min-height: 40px;
   }
-  .broadcast-preview .empty{ color: var(--text-faint); font-family: 'Inter', sans-serif; font-style: italic; }
+  pre.preview .empty { color: #999; font-style: italic; }
 
-  .table-wrap{ overflow-x: auto; }
-  table{ width: 100%; border-collapse: collapse; font-size: 12px; }
-  th, td{ text-align: left; padding: 8px 9px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-  td{ font-family: 'JetBrains Mono', monospace; }
-  th{ color: var(--text-faint); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; font-family: 'Inter', sans-serif; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #ddd; white-space: nowrap; }
+  th { color: #777; font-weight: normal; text-transform: uppercase; font-size: 10.5px; border-bottom: 1px solid #111; }
 
-  .clearance{
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    padding: 2px 8px;
-    border-radius: 3px;
-  }
-  .clearance.owner{ background: #a371f722; color: #a371f7; }
-  .clearance.dev{ background: #58a6ff22; color: #58a6ff; }
-  .clearance.visitor{ background: var(--surface-2); color: var(--text-faint); }
+  .ip { cursor: pointer; color: #555; }
+  .ip:hover { color: #111; }
 
-  .ip-cell{ cursor: pointer; color: var(--text-dim); }
-  .ip-cell:hover{ color: var(--text); }
-  .ip-cell .masked::after{ content: '••••••••'; letter-spacing: 1px; }
+  .diag-list div { padding: 4px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+  .diag-list .label { color: #777; display: inline-block; width: 160px; }
+  .diag-list .ok { color: #1a7a1a; }
+  .diag-list .bad { color: #b00; }
 
-  .reveal-toggle{ margin-bottom: 10px; }
-
-  .diag-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-
-  @media (max-width: 640px){
-    .diag-grid{ grid-template-columns: 1fr 1fr; }
-    main{ padding: 20px 14px 50px; }
-    nav.tabs{ padding: 0 14px; }
-  }
-
-  .diag-item{ background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
-  .diag-item .label{ color: var(--text-faint); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
-  .diag-item .value{ font-size: 17px; font-family: 'JetBrains Mono', monospace; margin-top: 3px; font-weight: 600; }
-  .diag-item .value.ok{ color: var(--clear); }
-  .diag-item .value.bad{ color: var(--restricted); }
-
-  .status-msg{ font-size: 11.5px; color: var(--text-dim); min-height: 1em; margin-top: 8px; font-family: 'JetBrains Mono', monospace; word-break: break-all; }
-  .empty-note{ color: var(--text-faint); font-size: 12.5px; padding: 6px 0; font-style: italic; }
+  .status-msg { font-size: 12px; color: #555; min-height: 1em; margin-top: 6px; word-break: break-all; }
+  .empty-note { color: #999; font-size: 13px; font-style: italic; padding: 4px 0; }
 </style>
 </head>
 <body>
 
-<div class="banner">Authorized Personnel Only — Session Logged</div>
-
 <div class="gate" id="gate">
-  <div class="mark">3STARSWIRL // DEV ACCESS</div>
-  <h1>Restricted Console</h1>
-  <p>Enter your access key to continue</p>
+  <h1>3STARSWIRL — dev access</h1>
+  <p>enter your access key to continue</p>
   <input id="gateInput" type="text" placeholder="access key" autocomplete="off" spellcheck="false">
-  <button id="gateBtn">Authenticate</button>
+  <button id="gateBtn">enter</button>
   <div class="err" id="gateErr"></div>
-
-  <div class="help-box">
-    <strong>No key?</strong>
-    If you already have dev access, run <code>devaccess</code> at the main terminal (or the Tools tab once you're in) to generate one. Otherwise, ask Lillith directly — keys aren't self-serve.
+  <div class="help">
+    <strong>no key?</strong>
+    if you already have dev access, run <code>devaccess</code> at the main terminal (or the tools tab once you're in) to generate one. otherwise ask Lillith directly — keys aren't self-serve.
   </div>
 </div>
 
 <div class="app" id="app">
-  <header class="top">
-    <div class="title">3STARSWIRL <span class="badge-tag">DEV</span> <span class="ver">v0.1</span></div>
-    <div class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">checking</span></div>
+  <header>
+    <div class="title">3STARSWIRL dev — v0.1</div>
+    <div class="status" id="statusText">checking...</div>
   </header>
 
-  <nav class="tabs">
-    <button data-tab="announce" class="active">Announcements</button>
-    <button data-tab="active">Active Visitors</button>
-    <button data-tab="diag">Diagnostics</button>
-    <button data-tab="tools">Tools</button>
+  <nav>
+    <a data-tab="announce" class="active">announcements</a>
+    <a data-tab="active">active visitors</a>
+    <a data-tab="diag">diagnostics</a>
+    <a data-tab="tools">tools</a>
   </nav>
 
   <main>
     <div class="panel show" id="panel-announce">
-      <div class="page-head">
-        <h1>Announcements</h1>
-        <p>Broadcasts appear live for anyone currently in the terminal.</p>
-      </div>
-
-      <div class="card">
-        <h2>Live Preview</h2>
-        <div class="broadcast-preview" id="broadcastPreview"><span class="empty">No active broadcast.</span></div>
-      </div>
-
-      <div class="card">
-        <h2>Append a Line</h2>
+      <section>
+        <h2>live preview</h2>
+        <pre class="preview" id="broadcastPreview"><span class="empty">no active broadcast.</span></pre>
+      </section>
+      <section>
+        <h2>append a line</h2>
         <div class="row">
           <select id="annColor">
-            <option value="amber">Amber</option>
-            <option value="red">Red</option>
-            <option value="grey">Grey</option>
-            <option value="purple">Purple</option>
-            <option value="accent">Accent (green)</option>
-            <option value="hex">Custom hex&hellip;</option>
+            <option value="amber">amber</option>
+            <option value="red">red</option>
+            <option value="grey">grey</option>
+            <option value="purple">purple</option>
+            <option value="accent">accent</option>
+            <option value="hex">custom hex</option>
           </select>
-          <input id="annHex" class="hexfield" type="text" placeholder="#ff6bd6" style="display:none;">
+          <input id="annHex" type="text" placeholder="#ff6bd6" style="display:none; width:110px;">
         </div>
         <div class="row">
-          <input id="annText" type="text" placeholder="Broadcast text">
-          <button class="btn primary" id="annSend">Post line</button>
+          <input id="annText" type="text" placeholder="broadcast text">
+          <button class="primary" id="annSend">post line</button>
         </div>
         <div class="row">
-          <button class="btn danger" id="annClear">End broadcast</button>
+          <button id="annClear">end broadcast</button>
         </div>
         <div class="status-msg" id="annStatus"></div>
-      </div>
+      </section>
     </div>
 
     <div class="panel" id="panel-active">
-      <div class="page-head">
-        <h1>Active Visitors</h1>
-        <p>Live heartbeat, plus a rolling log of recent activity. IPs are masked by default.</p>
-      </div>
-      <div class="card">
-        <h2>Active Right Now</h2>
-        <div class="reveal-toggle"><button class="btn small" id="revealActiveBtn">Reveal IPs</button></div>
-        <div class="table-wrap">
-          <table id="activeTable">
-            <thead><tr><th>Clearance</th><th>IP</th><th>Name</th><th>Last ping</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="empty-note" id="activeEmpty" style="display:none;">Nobody active right now.</div>
-      </div>
-      <div class="card">
-        <h2>Recent Activity (last 10)</h2>
-        <div class="reveal-toggle"><button class="btn small" id="revealRecentBtn">Reveal IPs</button></div>
-        <div class="table-wrap">
-          <table id="recentTable">
-            <thead><tr><th>Clearance</th><th>IP</th><th>Name</th><th>Last seen</th><th>Visits</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <div class="empty-note" id="recentEmpty" style="display:none;">No visitors logged yet.</div>
-      </div>
+      <section>
+        <h2>active right now</h2>
+        <div class="row"><button id="revealActiveBtn">reveal ips</button></div>
+        <table id="activeTable">
+          <thead><tr><th>role</th><th>ip</th><th>name</th><th>last ping</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-note" id="activeEmpty" style="display:none;">nobody active right now.</div>
+      </section>
+      <section>
+        <h2>recent activity (last 10)</h2>
+        <div class="row"><button id="revealRecentBtn">reveal ips</button></div>
+        <table id="recentTable">
+          <thead><tr><th>role</th><th>ip</th><th>name</th><th>last seen</th><th>visits</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-note" id="recentEmpty" style="display:none;">no visitors logged yet.</div>
+      </section>
     </div>
 
     <div class="panel" id="panel-diag">
-      <div class="page-head">
-        <h1>Diagnostics</h1>
-        <p>System health at a glance.</p>
-      </div>
-      <div class="card">
-        <div class="diag-grid" id="diagGrid"></div>
-      </div>
-      <div class="card">
-        <h2>Function Latency</h2>
-        <p class="hint">Round-trip time to the backend function, measured from your browser right now.</p>
-        <button class="btn" id="pingBtn">Ping</button>
+      <section>
+        <h2>diagnostics</h2>
+        <div class="diag-list" id="diagList"></div>
+      </section>
+      <section>
+        <h2>function latency</h2>
+        <p class="hint">round-trip time to the backend, measured right now.</p>
+        <button id="pingBtn">ping</button>
         <div class="status-msg" id="pingStatus"></div>
-      </div>
+      </section>
     </div>
 
     <div class="panel" id="panel-tools">
-      <div class="page-head">
-        <h1>Tools</h1>
-        <p>Quick actions and exports.</p>
-      </div>
-
-      <div class="card">
-        <h2>Generate Dev-Access Link</h2>
-        <button class="btn primary" id="devAccessBtn">Generate</button>
+      <section>
+        <h2>generate dev-access link</h2>
+        <button class="primary" id="devAccessBtn">generate</button>
         <div class="status-msg" id="devAccessStatus"></div>
-      </div>
-
-      <div class="card">
-        <h2>Export Visitor Log</h2>
-        <p class="hint">Downloads the full visitor history as a CSV file.</p>
-        <button class="btn" id="exportBtn">Export CSV</button>
+      </section>
+      <section>
+        <h2>export visitor log</h2>
+        <p class="hint">downloads the full visitor history as csv.</p>
+        <button id="exportBtn">export csv</button>
         <div class="status-msg" id="exportStatus"></div>
-      </div>
-
-      <div class="card">
-        <h2>Trigger Redeploy</h2>
-        <p class="hint">Kicks off a fresh Netlify deploy from the latest pushed commit. Requires a build hook to be configured.</p>
-        <button class="btn danger" id="deployBtn">Trigger Deploy</button>
+      </section>
+      <section>
+        <h2>trigger redeploy</h2>
+        <p class="hint">kicks off a fresh netlify deploy. requires a build hook to be configured.</p>
+        <button id="deployBtn">trigger deploy</button>
         <div class="status-msg" id="deployStatus"></div>
-      </div>
-
-      <div class="card">
-        <h2>Quick Links</h2>
+      </section>
+      <section>
+        <h2>quick links</h2>
         <div class="row">
-          <a class="btn link" href="https://3starswirl.com">Main site &rarr;</a>
-          <a class="btn link" href="https://app.netlify.com" target="_blank">Netlify dashboard &rarr;</a>
+          <a href="https://3starswirl.com">main site</a> &nbsp;·&nbsp;
+          <a href="https://app.netlify.com" target="_blank">netlify dashboard</a>
         </div>
-      </div>
+      </section>
     </div>
   </main>
 </div>
@@ -499,10 +282,6 @@
     return res.json();
   }
 
-  // ---------------------------------------------------------------
-  // gate
-  // ---------------------------------------------------------------
-
   const gate = document.getElementById('gate');
   const app = document.getElementById('app');
   const gateInput = document.getElementById('gateInput');
@@ -518,7 +297,7 @@
       initDashboard();
     } else {
       localStorage.removeItem('dev_owner_key');
-      gateErr.textContent = 'Invalid key.';
+      gateErr.textContent = 'invalid key.';
     }
   }
 
@@ -545,22 +324,14 @@
     }
   })();
 
-  // ---------------------------------------------------------------
-  // tabs
-  // ---------------------------------------------------------------
-
-  document.querySelectorAll('nav.tabs button').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      document.querySelectorAll('nav a').forEach(l => l.classList.remove('active'));
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('show'));
-      btn.classList.add('active');
-      document.getElementById('panel-' + btn.dataset.tab).classList.add('show');
+      link.classList.add('active');
+      document.getElementById('panel-' + link.dataset.tab).classList.add('show');
     });
   });
-
-  // ---------------------------------------------------------------
-  // announcements
-  // ---------------------------------------------------------------
 
   const annColor = document.getElementById('annColor');
   const annHex = document.getElementById('annHex');
@@ -569,19 +340,19 @@
   });
 
   function resolveColor(name){
-    if(name === 'grey') return '#8b949e';
-    if(name === 'purple') return '#a371f7';
-    if(name === 'red') return '#e5484d';
-    if(name === 'accent') return '#3fb950';
+    if(name === 'grey') return '#777';
+    if(name === 'purple') return '#7a3fc9';
+    if(name === 'red') return '#b00';
+    if(name === 'accent') return '#1a7a1a';
     if(/^#?[0-9a-fA-F]{3}$|^#?[0-9a-fA-F]{6}$/.test(name || '')) return name.startsWith('#') ? name : '#' + name;
-    return '#d29922';
+    return '#a06a00';
   }
 
   async function refreshBroadcastPreview(){
     const data = await api({ getAnnouncement: true });
     const el = document.getElementById('broadcastPreview');
     if(!data.active || !data.lines || !data.lines.length){
-      el.innerHTML = '<span class="empty">No active broadcast.</span>';
+      el.innerHTML = '<span class="empty">no active broadcast.</span>';
       return;
     }
     el.innerHTML = data.lines.map(l =>
@@ -592,10 +363,10 @@
   document.getElementById('annSend').addEventListener('click', async () => {
     const text = document.getElementById('annText').value.trim();
     const status = document.getElementById('annStatus');
-    if(!text){ status.textContent = 'Enter some text first.'; return; }
+    if(!text){ status.textContent = 'enter some text first.'; return; }
     const color = annColor.value === 'hex' ? annHex.value.trim() : annColor.value;
     const data = await api({ setAnnouncement: true, text, color });
-    status.textContent = data.found ? 'Posted.' : 'Failed — check your key.';
+    status.textContent = data.found ? 'posted.' : 'failed — check your key.';
     if(data.found){
       document.getElementById('annText').value = '';
       refreshBroadcastPreview();
@@ -605,32 +376,25 @@
   document.getElementById('annClear').addEventListener('click', async () => {
     const status = document.getElementById('annStatus');
     const data = await api({ setAnnouncement: true, clear: true });
-    status.textContent = data.found ? 'Broadcast ended.' : 'Failed — check your key.';
+    status.textContent = data.found ? 'broadcast ended.' : 'failed — check your key.';
     refreshBroadcastPreview();
   });
-
-  // ---------------------------------------------------------------
-  // active + recent visitors — IPs masked by default
-  // ---------------------------------------------------------------
 
   let activeRevealed = false;
   let recentRevealed = false;
 
   function ipCell(ip, revealed){
-    return revealed
-      ? ip
-      : `<span title="click Reveal IPs above to view">${'•'.repeat(Math.min(ip.length, 10))}</span>`;
+    return revealed ? ip : '•'.repeat(Math.min((ip || '').length, 10));
   }
 
   document.getElementById('revealActiveBtn').addEventListener('click', () => {
     activeRevealed = !activeRevealed;
-    document.getElementById('revealActiveBtn').textContent = activeRevealed ? 'Hide IPs' : 'Reveal IPs';
+    document.getElementById('revealActiveBtn').textContent = activeRevealed ? 'hide ips' : 'reveal ips';
     refreshActive();
   });
-
   document.getElementById('revealRecentBtn').addEventListener('click', () => {
     recentRevealed = !recentRevealed;
-    document.getElementById('revealRecentBtn').textContent = recentRevealed ? 'Hide IPs' : 'Reveal IPs';
+    document.getElementById('revealRecentBtn').textContent = recentRevealed ? 'hide ips' : 'reveal ips';
     refreshRecent();
   });
 
@@ -638,21 +402,13 @@
     const data = await api({ activeVisitors: true });
     const tbody = document.querySelector('#activeTable tbody');
     const emptyNote = document.getElementById('activeEmpty');
-    if(!data.found){ return; }
+    if(!data.found) return;
     tbody.innerHTML = '';
-    if(!data.active.length){
-      emptyNote.style.display = 'block';
-      return;
-    }
+    if(!data.active.length){ emptyNote.style.display = 'block'; return; }
     emptyNote.style.display = 'none';
     data.active.forEach(v => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><span class="clearance ${v.role}">${v.role}</span></td>
-        <td>${ipCell(v.ip, activeRevealed)}</td>
-        <td>${(v.lastName || '').replace(/</g,'&lt;')}</td>
-        <td>${v.lastPing || ''}</td>
-      `;
+      tr.innerHTML = `<td>${v.role}</td><td class="ip">${ipCell(v.ip, activeRevealed)}</td><td>${(v.lastName||'').replace(/</g,'&lt;')}</td><td>${v.lastPing||''}</td>`;
       tbody.appendChild(tr);
     });
   }
@@ -661,125 +417,83 @@
     const data = await api({ whoSeen: true });
     const tbody = document.querySelector('#recentTable tbody');
     const emptyNote = document.getElementById('recentEmpty');
-    if(!data.found){ return; }
+    if(!data.found) return;
     tbody.innerHTML = '';
     const recent = data.visitors.slice(0, 10);
-    if(!recent.length){
-      emptyNote.style.display = 'block';
-      return;
-    }
+    if(!recent.length){ emptyNote.style.display = 'block'; return; }
     emptyNote.style.display = 'none';
     recent.forEach(v => {
       const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><span class="clearance ${v.role}">${v.role}</span></td>
-        <td>${ipCell(v.ip, recentRevealed)}</td>
-        <td>${(v.lastName || '').replace(/</g,'&lt;')}</td>
-        <td>${v.lastSeen || ''}</td>
-        <td>${v.visitCount || 0}</td>
-      `;
+      tr.innerHTML = `<td>${v.role}</td><td class="ip">${ipCell(v.ip, recentRevealed)}</td><td>${(v.lastName||'').replace(/</g,'&lt;')}</td><td>${v.lastSeen||''}</td><td>${v.visitCount||0}</td>`;
       tbody.appendChild(tr);
     });
   }
 
-  // ---------------------------------------------------------------
-  // diagnostics + latency ping
-  // ---------------------------------------------------------------
-
   async function refreshDiagnostics(){
     const data = await api({ diagnostics: true });
-    const grid = document.getElementById('diagGrid');
-    const pill = document.getElementById('statusPill');
+    const list = document.getElementById('diagList');
     const statusText = document.getElementById('statusText');
-
-    if(!data.found){
-      grid.innerHTML = '<div class="empty-note">Unable to load diagnostics.</div>';
-      return;
-    }
-
-    pill.classList.toggle('bad', !data.blobsOk);
+    if(!data.found){ list.innerHTML = '<div class="empty-note">unable to load diagnostics.</div>'; return; }
     statusText.textContent = data.blobsOk ? 'systems normal' : 'storage error';
-
     const items = [
-      ['Blobs storage', data.blobsOk ? 'OK' : 'Error', data.blobsOk],
-      ['Total visitors', data.totalVisitors, true],
-      ['Active now', data.activeNow, true],
-      ['Site launched', data.launch ? new Date(data.launch).toLocaleDateString() : 'unknown', true],
-      ['Names in table', data.nameCount, true],
-      ['Dev keys in pool', data.devKeyCount, true]
+      ['blobs storage', data.blobsOk ? 'ok' : 'error', data.blobsOk],
+      ['total visitors', data.totalVisitors, true],
+      ['active now', data.activeNow, true],
+      ['site launched', data.launch ? new Date(data.launch).toLocaleDateString() : 'unknown', true],
+      ['names in table', data.nameCount, true],
+      ['dev keys in pool', data.devKeyCount, true]
     ];
-    grid.innerHTML = items.map(([label, value, ok]) => `
-      <div class="diag-item">
-        <div class="label">${label}</div>
-        <div class="value ${ok ? 'ok' : 'bad'}">${value}</div>
-      </div>
-    `).join('');
+    list.innerHTML = items.map(([label, value, ok]) =>
+      `<div><span class="label">${label}</span><span class="${ok ? 'ok' : 'bad'}">${value}</span></div>`
+    ).join('');
   }
 
   document.getElementById('pingBtn').addEventListener('click', async () => {
     const status = document.getElementById('pingStatus');
-    status.textContent = 'pinging…';
+    status.textContent = 'pinging...';
     const start = performance.now();
     const data = await api({ ping: true });
     const elapsed = Math.round(performance.now() - start);
     if(!data.ok){ status.textContent = 'ping failed.'; return; }
     const skew = Date.now() - data.serverTime;
-    status.textContent = `${elapsed}ms round trip · clock skew ${skew}ms`;
+    status.textContent = elapsed + 'ms round trip · clock skew ' + skew + 'ms';
   });
-
-  // ---------------------------------------------------------------
-  // tools
-  // ---------------------------------------------------------------
 
   document.getElementById('devAccessBtn').addEventListener('click', async () => {
     const status = document.getElementById('devAccessStatus');
     const data = await api({ devAccess: true });
-    if(!data.found){ status.textContent = 'Failed — check your key.'; return; }
-    const url = 'https://3starswirl.com/?unlock=' + data.key;
-    status.textContent = url;
+    if(!data.found){ status.textContent = 'failed — check your key.'; return; }
+    status.textContent = 'https://3starswirl.com/?unlock=' + data.key;
   });
 
   document.getElementById('exportBtn').addEventListener('click', async () => {
     const status = document.getElementById('exportStatus');
     const data = await api({ whoSeen: true });
-    if(!data.found || !data.visitors.length){
-      status.textContent = 'Nothing to export.';
-      return;
-    }
+    if(!data.found || !data.visitors.length){ status.textContent = 'nothing to export.'; return; }
     const header = 'ip,lastName,role,firstSeen,lastSeen,visitCount';
-    const escape = v => '"' + String(v).replace(/"/g, '""') + '"';
-    const rows = data.visitors.map(v =>
-      [v.ip, v.lastName, v.role, v.firstSeen, v.lastSeen, v.visitCount].map(escape).join(',')
-    );
+    const esc = v => '"' + String(v).replace(/"/g, '""') + '"';
+    const rows = data.visitors.map(v => [v.ip, v.lastName, v.role, v.firstSeen, v.lastSeen, v.visitCount].map(esc).join(','));
     const csv = [header].concat(rows).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `3starswirl-visitors-${Date.now()}.csv`;
+    a.download = '3starswirl-visitors-' + Date.now() + '.csv';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    status.textContent = `Exported ${data.visitors.length} record(s).`;
+    status.textContent = 'exported ' + data.visitors.length + ' record(s).';
   });
 
   document.getElementById('deployBtn').addEventListener('click', async () => {
     const status = document.getElementById('deployStatus');
-    status.textContent = 'triggering…';
+    status.textContent = 'triggering...';
     const data = await api({ triggerDeploy: true });
-    if(data.found && data.triggered){
-      status.textContent = 'Deploy triggered.';
-    } else if(data.error){
-      status.textContent = 'Failed: ' + data.error;
-    } else {
-      status.textContent = 'Failed — check your key or build hook setup.';
-    }
+    if(data.found && data.triggered){ status.textContent = 'deploy triggered.'; }
+    else if(data.error){ status.textContent = 'failed: ' + data.error; }
+    else { status.textContent = 'failed — check your key or build hook setup.'; }
   });
-
-  // ---------------------------------------------------------------
-  // init
-  // ---------------------------------------------------------------
 
   let refreshIntervalId = null;
 
@@ -788,7 +502,6 @@
     refreshActive();
     refreshRecent();
     refreshDiagnostics();
-
     if(refreshIntervalId !== null) clearInterval(refreshIntervalId);
     refreshIntervalId = setInterval(() => {
       refreshBroadcastPreview();
