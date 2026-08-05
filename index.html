@@ -27,7 +27,140 @@
   body { background:#fff; color:#000; font-family:sans-serif; }
 
   #normal { padding: 8px; }
-  #normal #fourohfour { cursor:default; user-select:none; }
+  #normal #fourohfour, #normal #mail { cursor:default; user-select:none; }
+
+  /* ---- the door (replaces the asterisk at 4 eggs) ---- */
+  #doorWrap { display:none; }
+  #doorWrap.on { display:block; }
+
+  /* once the door is here it takes the whole page — the 404 text and
+     the address are hidden, and it sits dead centre */
+  body.door-time #normal { display:none; }
+
+  #doorBtn {
+    position:fixed;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    z-index:42;
+    background:transparent;
+    border:none;
+    padding:0;
+    cursor:pointer;
+    line-height:0;
+  }
+
+  /* five frames laid out side by side, stepped through in css so the
+     timing and looping are ours to control — the source webp carried
+     no frame durations, which is why it wouldn't loop properly. */
+  #doorBtn .door {
+    display:block;
+    width:72px;
+    height:118px;
+    background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAWgAAAB2CAYAAADlTgmKAAAFXElEQVR42u3dP48TRxwG4HV0VKncUPAFUkMootBQUZyUElHSIAWJL8BHSItEJCIhRZQIpYp0BRUNKAUh34KCxmVKp4CJ5NUNOzv7b2b3eSru7B3b7x2/eW/t8+2alhvX9sdmwz58POy+drl85CMf+cyVzzcNAEU6a+9cd+/9uu1EXj46XraTyUc+8pHP3Plo0ACF2tm5Lvfq5aOTj+UjH/nIZ+58NGiAQhnQAAY0AH2cxS64ePFwU0Gc33/W6/rykY985DN1Pho0QG0NOri1f7DqAN4eng86Xj7ykY98pspHgwYolAENYEADYEADGNAATOVs6AI3Px2KfoDvr+4XvX35yEc+8tGgATTo051r6R201PspH/nIRz5D76cGDbC2Bp26c8Sk7ihjrVPqziof+chHPho0wNYbdOqzql3nZsZap7adXT7ykY98NGiAwhnQAAY0AAY0gAENgAENYEADYEADYEADGNAAGNAABjQABjQABjSAAQ2AAQ1gQANgQAMY0AAY0AAY0AAGNAAGNIABDYABDYABDWBAA5DrbC0P5OanQ9M0TfPkyh8nn3975cs/Pl/c3No/2OQXWj7ykU99+WjQABr0tNo71/n9ZycfX7x4+HlHOzzf5E4vH/nIp758NGgADXoe7Z2r/fmwk22VfOQjn3ry0aABCmVAAxjQAPSxunPQ4RxP7FnUrZOPfORTTz4aNIAGPY/Ys6WeZZaPfORTWz4aNIAGvcxOhnzkI59a89GgATToecXOASEf+cinlnw0aAANel52dPnIRz6156NBA2jQ8/AbTfKRj3zWko8GDaBBTyv2FwrC3wp7f3W/6S+0fOQjn/ry0aABCmVAAxjQABjQAAY0AAY0gAENgAENgAENYEADYEADGNAAGNAAGNAABjQA/Y3+ftDhfU/D+6B2XW/qdUojH/nIRz4aNIAGPe3Osta/1CAf+chHPho0wNYadOo5mrXspPKRj3zkM3c+GjTA2hr00jtoLeQjH/nIR4MG2FqDfv3v76sO4NuBx8tHPvKRz1T5aNAAhdrduLY/XnbBh4+HXdM0zfGf82PTNM3u+sUuZcFw/WoC+PK4YjnEPH3y3ST358e7f30153evfpg133B/+ubz//fPL/vjqv7DPD5c+vXpm8/f30fW//Ow67PO8aey8w2PJ/f75/Wbn0+Ou3P7t175tI8vTXg8sXw0aIBSN7jknTqzGYeGOlazjjX59vqpjT/X0CYbmml7nViDjl0v9X601+06rqvJ50pt1KGp5jbw3ONjDXn0HCLNt92gx27IXQ296/bC8X3vV9+fDOaS2tBjTTy10Xc1+dg6GjRA7Q06tVF3NdfUJp17zju3Ofc91963SfdtsH2bd+46c+lqsqnNte86Q283HD91s567kbZvL7be0KZfanOeunmnnvvuauAaNMDaGvTQBjq0+Y59zjm3QXc16rFflTG0QZfSnPs25tj1Uy/Pvf3J85mpeaY29NwmndrIp2qstTTtvvdfgwZYe4OerXFknvueuoGP1bhTm2/suLEaclh/rPVym2z7uNxz1aU05r5Nd65zzUutl9tAa2vSuTRoAA06rymP3WynWnfpJj33ueWlGnTsuNi56KHHL9Wcx26oYf3c9eZuzqmNWoMGYBG93w96rgba/g3EsW6vtOY8VOnNObUpj9XIS7l/i/2kEmnKQxtvKa9nDo15qvfYCOu2b2eppq5BA5RabERQlqlfnVFdIxz4Xhq1vppjaIMurfmWaujrlDVoAA0a6m3Sa2/GuQ26cwBU1rC9igMAAxqSm97jw05LTmvEzjsb0ABMveGKANbPqzs0aABG9B8CP7DyOlHmEgAAAABJRU5ErkJggg==);
+    background-repeat:no-repeat;
+    background-size:360px 118px;
+    image-rendering:pixelated;
+    animation: doorframes 0.65s steps(5) infinite;
+  }
+  @keyframes doorframes {
+    from { background-position: 0 0; }
+    to   { background-position: -360px 0; }
+  }
+
+  /* ---- final room ---- */
+  #finalRoom {
+    display:none;
+    position:fixed;
+    inset:0;
+    background:#000;
+    z-index:60;
+  }
+  #finalRoom.on { display:block; }
+
+  #finalEgg {
+    position:absolute;
+    left:50%;
+    top:46%;
+    transform:translate(-50%,-50%);
+    cursor:pointer;
+    line-height:0;
+    padding:24px;               /* easier to hit than the sprite alone */
+  }
+
+  /* two frames, flipped back and forth */
+  /* 11x11 source, shown at 4x so every line stays exactly 4px wide */
+  .sparkle {
+    display:block;
+    width:44px;
+    height:44px;
+    background-image:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAALCAYAAAB7/H1+AAAASElEQVR42s1SQQoAMAjS/z/a3YeUDYJ1NJMUATOSNMFjXiXQiZf71+PWUWL55kQxTbN0fKYiAECSTtzhax//lfFKK1Z6PMn+ANE1f4pKuOihAAAAAElFTkSuQmCC);
+    background-repeat:no-repeat;
+    background-size:88px 44px;
+    image-rendering:pixelated;
+    animation: twinkle 0.66s steps(2) infinite;
+  }
+  @keyframes twinkle {
+    from { background-position: 0 0; }
+    to   { background-position: -88px 0; }
+  }
+
+  /* ---- item asterisk + panel ---- */
+  #inv { display:none; }
+  #inv.on { display:block; }
+
+  #invBtn {
+    position:fixed;
+    right:16px;
+    bottom:14px;
+    z-index:40;
+    background:transparent;
+    border:none;
+    font-family:'UTDR', monospace;
+    font-size:26px;
+    line-height:1;
+    padding:6px 10px;
+    cursor:pointer;
+    color:#000;                 /* dark text on the white 404 */
+  }
+  body.in-room #invBtn { color:#fff; }
+  #invBtn:hover { color:#ff2f2f; }
+
+  #invPanel {
+    display:none;
+    position:fixed;
+    right:16px;
+    bottom:56px;
+    z-index:41;
+    min-width:200px;
+    background:#000;
+    border:5px solid #fff;
+    outline:2px solid #000;
+    outline-offset:-9px;
+    padding:16px 18px;
+    font-family:'UTDR', monospace;
+    color:#fff;
+    font-size:17px;
+    line-height:1.6;
+  }
+  #invPanel.on { display:block; }
+
+  .inv-head {
+    color:#8a8a8a;
+    font-size:13px;
+    letter-spacing:1px;
+    margin-bottom:8px;
+  }
+
+  .inv-item { cursor:pointer; }
+  .inv-item:hover { color:#ff2f2f; }
+
+  #invDesc {
+    margin-top:10px;
+    color:#9a9a9a;
+    font-size:14px;
+    min-height:1.2em;
+  }
 
   /* ---- egg room ---- */
   #room {
@@ -142,36 +275,85 @@
     display:none;
     position:absolute;
     left:50%;
-    bottom:36px;
+    bottom:30px;
     transform:translateX(-50%);
-    width:min(580px, calc(100vw - 36px));
-    min-height:100px;
+    width:min(640px, calc(100vw - 20px));
+    min-height:150px;
     background:#000;
-    border:4px solid #fff;
-    padding:18px 20px;
+    /* thick outer rule, thin inner gap, like the dark-world boxes */
+    border:6px solid #fff;
+    outline:3px solid #000;
+    outline-offset:-11px;
+    padding:24px 26px 22px;
     box-sizing:border-box;
     color:#fff;
     font-family:'UTDR', monospace;
     font-size:21px;
     line-height:1.5;
-    white-space:pre-wrap;
     cursor:pointer;
+    flex-direction:column;
   }
-  #box.on { display:block; }
+  #box.on { display:flex; }
 
-  #choices { margin-top:14px; display:none; }
-  #choices.on { display:block; }
-  #choices button {
-    background:#000;
-    color:#fff;
-    border:3px solid #fff;
-    font-family:'UTDR', monospace;
-    font-size:20px;
-    padding:4px 22px;
-    margin-right:16px;
-    cursor:pointer;
+  /* the line sits up top; choices get pushed to the bottom */
+  #textrow {
+    white-space:nowrap;
+    overflow:hidden;
   }
-  #choices button:hover { background:#fff; color:#000; }
+
+  /* four-point sparkles sitting on the corners */
+  .corner {
+    position:absolute;
+    width:14px;
+    height:14px;
+    pointer-events:none;
+  }
+  .corner::before, .corner::after {
+    content:'';
+    position:absolute;
+    background:#fff;
+  }
+  .corner::before { left:6px; top:0;  width:2px; height:14px; }
+  .corner::after  { left:0;  top:6px; width:14px; height:2px; }
+  .corner.tl { left:-8px;  top:-8px; }
+  .corner.tr { right:-8px; top:-8px; }
+  .corner.bl { left:-8px;  bottom:-8px; }
+  .corner.br { right:-8px; bottom:-8px; }
+
+  #choices { display:none; }
+  #choices.on {
+    display:flex;
+    justify-content:space-between;   /* one at each end */
+    width:100%;
+    padding:0 18px 0 44px;           /* left room for the soul beside "Yes" */
+    box-sizing:border-box;
+    margin-top:auto;                 /* pin to the bottom of the box */
+    position:relative;
+  }
+
+  .opt {
+    font-family:'UTDR', monospace;
+    font-size:21px;
+    color:#fff;
+    cursor:pointer;
+    user-select:none;
+    white-space:nowrap;
+  }
+
+  /* one soul, slid into place — not one per option */
+  #soul {
+    position:absolute;
+    left:0;
+    top:50%;
+    width:22px;
+    height:20px;
+    line-height:0;
+    pointer-events:none;
+    /* translate3d keeps it on whole pixels — no subpixel smearing */
+    transform:translate3d(0,-50%,0);
+    transition:transform 110ms cubic-bezier(.2,.9,.3,1);
+  }
+  #soul svg { display:block; }
 
   #cursor.blink { animation: bl 1s steps(1) infinite; }
   @keyframes bl { 0%,49%{opacity:1} 50%,100%{opacity:0} }
@@ -179,10 +361,27 @@
 </head>
 <body>
 
+<div id="doorWrap">
+  <button id="doorBtn" title="?"><span class="door"></span></button>
+</div>
+
+<div id="finalRoom">
+  <div id="finalEgg"><span class="sparkle"></span></div>
+</div>
+
+<div id="inv">
+  <button id="invBtn" title="items">*</button>
+  <div id="invPanel">
+    <div class="inv-head">* ITEMS</div>
+    <div id="invList"></div>
+    <div id="invDesc"></div>
+  </div>
+</div>
+
 <div id="normal">
   <span id="fourohfour">404</span>
   <br>
-  contact@3starswirl.com
+  <span id="mail">contact@3starswirl.com</span>
 </div>
 
 <audio id="music" loop preload="none"></audio>
@@ -195,9 +394,12 @@
   <div id="astatus"></div>
   <div id="credit">font: "undertale deltarune extended (Fixed)" by Viika &mdash; used with permission</div>
   <div id="box">
-    <span id="line"></span><span id="cursor"></span>
+    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    <div id="textrow"><span id="line"></span><span id="cursor"></span></div>
     <div id="choices">
-      <button id="yes">Yes</button><button id="no">No</button>
+      <span id="soul"><svg viewBox="0 0 11 10" width="22" height="20" shape-rendering="crispEdges" fill="#ff2f2f" aria-hidden="true"><rect x="2" y="0" width="2" height="1"/><rect x="7" y="0" width="2" height="1"/><rect x="1" y="1" width="4" height="1"/><rect x="6" y="1" width="4" height="1"/><rect x="0" y="2" width="11" height="1"/><rect x="0" y="3" width="11" height="1"/><rect x="0" y="4" width="11" height="1"/><rect x="1" y="5" width="9" height="1"/><rect x="2" y="6" width="7" height="1"/><rect x="3" y="7" width="5" height="1"/><rect x="4" y="8" width="3" height="1"/><rect x="5" y="9" width="1" height="1"/></svg></span>
+      <span class="opt" data-v="1">Yes</span>
+      <span class="opt" data-v="0">No</span>
     </div>
   </div>
 </div>
@@ -236,12 +438,125 @@
     return document.cookie.split(';').some(c => c.trim().startsWith('swirl_egg=1'));
   }
 
+  // ---------------------------------------------------------------
+  // items. kept as a list so more can be added later without
+  // reworking any of this. session-scoped, same as the egg flag.
+  // ---------------------------------------------------------------
+  const ITEM_DESC = {
+    'Egg': '* (It does nothing.)'
+  };
+
+  function getItems(){
+    try { return JSON.parse(sessionStorage.getItem('swirl_items') || '[]'); }
+    catch(e){ return []; }
+  }
+
+  function addItem(name){
+    const items = getItems();
+    items.push(name);                  // duplicates allowed — four eggs is the joke
+    try { sessionStorage.setItem('swirl_items', JSON.stringify(items)); } catch(e){}
+    refreshInv();
+  }
+
+  function eggCount(){
+    return getItems().filter(n => n === 'Egg').length;
+  }
+
+  function finalDone(){
+    return sessionStorage.getItem('swirl_405') === '1';
+  }
+
+  // counts rapid repeated clicks; resets if you pause
+  function spamCounter(need, gapMs){
+    let n = 0, last = 0;
+    return function(){
+      const now = Date.now();
+      if (now - last > gapMs) n = 0;
+      last = now;
+      n++;
+      if (n >= need){ n = 0; return true; }
+      return false;
+    };
+  }
+
+  const invWrap  = document.getElementById('inv');
+  const invBtn   = document.getElementById('invBtn');
+  const invPanel = document.getElementById('invPanel');
+  const invList  = document.getElementById('invList');
+  const invDesc  = document.getElementById('invDesc');
+
+  const doorWrap = document.getElementById('doorWrap');
+
+  function refreshInv(){
+    const items = getItems();
+    const done = eggCount() >= 4;
+    // the door only belongs on the main page — if it's shown while
+    // you're still standing in the egg room it floats over the tree
+    const showDoor = done && !inRoom && !finalDone();
+    // at four eggs the asterisk is gone and a door is there instead
+    invWrap.classList.toggle('on', items.length > 0 && !done);
+    doorWrap.classList.toggle('on', showDoor);
+    document.body.classList.toggle('door-time', showDoor);
+    if (done) invPanel.classList.remove('on');
+    invList.innerHTML = '';
+    items.forEach(name => {
+      const row = document.createElement('div');
+      row.className = 'inv-item';
+      row.textContent = '* ' + name;
+      row.addEventListener('click', (e) => {
+        e.stopPropagation();
+        invDesc.textContent = ITEM_DESC[name] || '';
+        playSfx('text');
+      });
+      invList.appendChild(row);
+    });
+    if (!items.length) invPanel.classList.remove('on');
+  }
+
+  invBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = invPanel.classList.toggle('on');
+    if (!open) invDesc.textContent = '';
+    playSfx('text');
+  });
+
+  // click anywhere else closes it
+  document.addEventListener('click', (e) => {
+    if (!invPanel.classList.contains('on')) return;
+    if (invPanel.contains(e.target) || e.target === invBtn) return;
+    invPanel.classList.remove('on');
+    invDesc.textContent = '';
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape'){
+      invPanel.classList.remove('on');
+      invDesc.textContent = '';
+    }
+  });
+
   function giveEgg(){
     sessionStorage.setItem('swirl_egg', '1');
     sessionStorage.setItem('swirl_egg_at', new Date().toISOString());
-    // no max-age / expires => session cookie, dies with the browser
+    addItem('Egg');
+    // session cookie (no max-age) — but a session cookie only dies with
+    // the whole browser, not this tab, so we also clear it explicitly
+    // on unload below.
     document.cookie = 'swirl_egg=1; path=/; SameSite=Lax';
   }
+
+  function clearEgg(){
+    try {
+      sessionStorage.removeItem('swirl_egg');
+      sessionStorage.removeItem('swirl_egg_at');
+      sessionStorage.removeItem('swirl_items');
+    } catch(e){}
+    document.cookie = 'swirl_egg=; path=/; max-age=0; SameSite=Lax';
+  }
+
+  // the egg is meant to last exactly one visit — bin it when the tab goes
+  window.addEventListener('pagehide', clearEgg);
+  window.addEventListener('beforeunload', clearEgg);
 
   // ---------------------------------------------------------------
   // music. preload="none" means the file is only ever fetched if
@@ -356,7 +671,8 @@
 
   const SFX_SRC = {
     text: canMp3 ? 'sfx-text.wav' : 'sfx-text.ogg',   // wav = no encoder padding
-    egg:  canMp3 ? 'sfx-egg.mp3'  : 'sfx-egg.ogg'
+    egg:  canMp3 ? 'sfx-egg.mp3'  : 'sfx-egg.ogg',
+    door: canMp3 ? 'sfx-door.mp3' : 'sfx-door.ogg'
   };
 
   const sfxPools = {};
@@ -383,6 +699,7 @@
     if (sfxPools.text) return;
     buildPool('text', 6, 0.55);   // fires per character, needs headroom
     buildPool('egg',  1, 0.9);
+    buildPool('door', 1, 0.85);
   }
 
   function playSfx(name){
@@ -402,9 +719,28 @@
   // ---------------------------------------------------------------
   let typing = false;
 
+  // scale the line down if it would overflow, so a long line never
+  // breaks onto a second row on a narrow screen
+  const BASE_FONT = 21;
+  function fitLine(text){
+    lineEl.style.fontSize = '';
+    const avail = box.clientWidth - 52;          // minus horizontal padding
+    const probe = document.createElement('span');
+    probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;' +
+                          "font-family:'UTDR',monospace;font-size:" + BASE_FONT + 'px;';
+    probe.textContent = text + ' ';
+    document.body.appendChild(probe);
+    const w = probe.offsetWidth;
+    document.body.removeChild(probe);
+    if (w > avail && w > 0){
+      lineEl.style.fontSize = Math.max(11, Math.floor(BASE_FONT * avail / w)) + 'px';
+    }
+  }
+
   function type(text){
     return new Promise(resolve => {
       typing = true;
+      fitLine(text);
       lineEl.textContent = '';
       cursor.classList.remove('blink');
       let i = 0;
@@ -419,7 +755,7 @@
           lineEl.textContent += text[i];
           if (text[i] !== ' ') playSfx('text');
           i++;
-          setTimeout(step, 38);
+          setTimeout(step, 24);
         } else {
           typing = false;
           cursor.classList.add('blink');
@@ -440,23 +776,65 @@
     });
   }
 
+  // soul-cursor choice: arrows/tap to move, enter or z to confirm.
+  // tapping an option directly picks it outright.
   function waitChoice(){
     return new Promise(resolve => {
+      const opts = Array.from(choices.querySelectorAll('.opt'));
+      let sel = -1;                    // -1 = undecided, soul waits in the middle
       choices.classList.add('on');
-      const yesBtn = document.getElementById('yes');
-      const noBtn  = document.getElementById('no');
-      function done(v){
-        return function(e){
-          e.stopPropagation();
-          choices.classList.remove('on');
-          yesBtn.removeEventListener('click', y);
-          noBtn.removeEventListener('click', n);
-          resolve(v);
-        };
+
+      const soul = document.getElementById('soul');
+
+      const SOUL_W = 22;
+      function place(){
+        // round to whole pixels, otherwise the sprite lands on a
+        // half-pixel and the browser smears it
+        let x;
+        if (sel < 0){
+          x = Math.round((choices.clientWidth - SOUL_W) / 2);   // dead centre
+        } else {
+          x = Math.round(opts[sel].offsetLeft - SOUL_W - 10);   // just left of the word
+        }
+        soul.style.transform = 'translate3d(' + x + 'px, -50%, 0)';
       }
-      const y = done(true), n = done(false);
-      yesBtn.addEventListener('click', y);
-      noBtn.addEventListener('click', n);
+
+      function draw(){
+        opts.forEach((o, i) => o.classList.toggle('sel', i === sel));
+        place();
+      }
+
+      function move(d){
+        // first nudge commits to whichever side you pushed toward
+        sel = (sel < 0) ? (d < 0 ? 0 : opts.length - 1)
+                        : (sel + d + opts.length) % opts.length;
+        playSfx('text');
+        draw();
+      }
+      function finish(v){
+        choices.classList.remove('on');
+        document.removeEventListener('keydown', onKey);
+        opts.forEach((o, i) => o.removeEventListener('click', clickers[i]));
+        resolve(v === '1');
+      }
+      function onKey(e){
+        const k = e.key.toLowerCase();
+        if (k === 'arrowleft'  || k === 'a') { e.preventDefault(); move(-1); }
+        else if (k === 'arrowright' || k === 'd') { e.preventDefault(); move(1); }
+        else if (k === 'enter' || k === ' ' || k === 'z') {
+          e.preventDefault();
+          if (sel < 0) return;         // nothing picked yet
+          finish(opts[sel].dataset.v);
+        }
+      }
+      const clickers = opts.map((o, i) => {
+        const fn = (e) => { e.stopPropagation(); sel = i; draw(); finish(o.dataset.v); };
+        o.addEventListener('click', fn);
+        return fn;
+      });
+
+      draw();
+      document.addEventListener('keydown', onKey);
     });
   }
 
@@ -473,14 +851,19 @@
   // the encounter
   // ---------------------------------------------------------------
   let busy = false;
+  let roomGrants = false;      // does the tree hand over an egg in this room?
+  const SPAM_NEED = 12;
+  const treeSpam = spamCounter(SPAM_NEED, 700);
 
   function exitRoom(){
     inRoom = false;          // set first, so nothing can restart it
+    document.body.classList.remove('in-room');
     stopMusic();
     room.classList.remove('on');
     box.classList.remove('on');
     hint.textContent = '';
     normal.style.display = '';
+    refreshInv();            // door only appears now you're back out here
   }
 
   // offered at the end of any exchange, so you're never stuck here
@@ -488,8 +871,6 @@
     await type('* (Leave?)');
     const go = await waitChoice();
     if (go){
-      // cut the music immediately on Leave — before the flicker, before
-      // exitRoom, before anything that could be delayed or interrupted
       inRoom = false;
       stopMusic();
       box.classList.remove('on');
@@ -500,25 +881,7 @@
     }
   }
 
-  async function talkToTree(){
-    if (busy) return;
-    busy = true;
-
-    hint.textContent = '';
-    box.classList.add('on');
-
-    // once you've taken the egg, he's gone
-    await type(hasEgg()
-      ? "* (Well, there isn't a man here.)"
-      : '* (Well, there is a man here.)');
-    await waitClick();
-
-    if (hasEgg()){
-      await offerExit();
-      busy = false;
-      return;
-    }
-
+  async function grantEgg(){
     await type('* (He offers you an Egg.)');
     await waitClick();
 
@@ -529,12 +892,10 @@
       await type('* (He does not seem surprised.)');
       await waitClick();
       await offerExit();
-      busy = false;
       return;
     }
 
     giveEgg();
-
     playSfx('egg');
     await flicker();
 
@@ -545,11 +906,78 @@
     await waitClick();
 
     await offerExit();
+  }
+
+  // brief refusal that clears itself — no click needed to dismiss
+  const DENY_LINE = "* (Well, there isn't a man here.)";
+  let denyTimer = null;
+  function showDenial(){
+    clearTimeout(denyTimer);
+    typing = false;
+    choices.classList.remove('on');
+    box.classList.add('on');
+    fitLine(DENY_LINE);
+    lineEl.textContent = DENY_LINE;
+    cursor.classList.remove('blink');
+    playSfx('text');
+    denyTimer = setTimeout(() => {
+      if (!busy) box.classList.remove('on');
+    }, 950);
+  }
+
+  async function talkToTree(){
+    if (busy) return;
+
+    const n = eggCount();
+
+    // fourth egg: the tree only gives it up if you really insist.
+    // the refusal flashes up and clears itself instead of waiting on a
+    // click, so you can just mash the tree rather than sitting through
+    // the same line a dozen times.
+    if (!roomGrants && n === 3){
+      if (busy) return;              // the crack sequence is already running
+      hint.textContent = '';
+
+      if (treeSpam()){
+        clearTimeout(denyTimer);
+        busy = true;
+        box.classList.add('on');
+        await type('* (...)');
+        await waitClick();
+        await type('* (Something is still here after all.)');
+        await waitClick();
+        await grantEgg();
+        busy = false;
+        return;
+      }
+
+      showDenial();
+      return;
+    }
+
+    busy = true;
+    hint.textContent = '';
+    box.classList.add('on');
+
+    if (roomGrants){
+      roomGrants = false;                    // one egg per visit
+      await type('* (Well, there is a man here.)');
+      await waitClick();
+      await grantEgg();
+    } else {
+      await type("* (Well, there isn't a man here.)");
+      await waitClick();
+      await offerExit();
+    }
+
     busy = false;
   }
 
-  function enterRoom(){
+  function enterRoom(grants){
+    roomGrants = !!grants;
     inRoom = true;
+    refreshInv();          // tuck the door/asterisk away while in here
+    document.body.classList.add('in-room');
     loadSfx();
     normal.style.display = 'none';
     room.classList.add('on');
@@ -562,10 +990,104 @@
     }, 4500);
   }
 
-  if (roll()) enterRoom();
+  refreshInv();
+
+  // the 404 becomes a 405 once the chain is finished
+  if (sessionStorage.getItem('swirl_405') === '1'){
+    document.getElementById('fourohfour').textContent = '405';
+  }
+
+  if (roll()) enterRoom(eggCount() === 0);
 
   document.getElementById('fourohfour').addEventListener('click', () => {
-    if (roll()) enterRoom();
+    if (roll()) enterRoom(eggCount() === 0);
+  });
+
+  // ---------------------------------------------------------------
+  // the chain
+  //   1. the tree, in a room you stumbled into
+  //   2. spam the item asterisk
+  //   3. spam the contact address
+  //   4. back to the tree, and insist
+  // ---------------------------------------------------------------
+  const invSpam = spamCounter(SPAM_NEED, 700);
+  invBtn.addEventListener('click', () => {
+    if (eggCount() !== 1) return;
+    if (invSpam()){
+      invPanel.classList.remove('on');
+      enterRoom(true);
+    }
+  });
+
+  const mailSpam = spamCounter(SPAM_NEED, 700);
+  document.getElementById('mail').addEventListener('click', () => {
+    if (eggCount() !== 2) return;
+    if (mailSpam()) enterRoom(true);
+  });
+
+  // ---------------------------------------------------------------
+  // the door
+  // ---------------------------------------------------------------
+  const finalRoom = document.getElementById('finalRoom');
+  const finalEgg  = document.getElementById('finalEgg');
+  let finalBusy = false;
+
+  let doorOpening = false;
+  document.getElementById('doorBtn').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if (eggCount() < 4 || doorOpening) return;
+    doorOpening = true;
+
+    loadSfx();
+    stopMusic();
+    playSfx('door');            // sound first, then it opens
+    await sleep(900);
+
+    inRoom = false;
+    room.classList.remove('on');
+    normal.style.display = 'none';
+    document.body.classList.add('in-room');
+    doorWrap.classList.remove('on');
+    finalRoom.classList.add('on');
+    finalRoom.appendChild(box);
+    doorOpening = false;
+  });
+
+  finalEgg.addEventListener('click', async () => {
+    if (finalBusy) return;
+    finalBusy = true;
+
+    box.classList.add('on');
+    await type("* (There isn't a man anymore.)");
+    await waitClick();
+    await type('* (Just an egg.)');
+    await waitClick();
+    await type('* (Take it?)');
+    const yes = await waitChoice();
+
+    if (!yes){
+      await type('* (It waits.)');
+      await waitClick();
+      box.classList.remove('on');
+      finalBusy = false;
+      return;
+    }
+
+    playSfx('egg');
+    box.classList.remove('on');
+    await flicker();
+    await sleep(140);
+    await flicker();
+
+    try { sessionStorage.setItem('swirl_405', '1'); } catch(e){}
+    document.getElementById('fourohfour').textContent = '405';
+
+    finalRoom.classList.remove('on');
+    document.body.classList.remove('in-room');
+    document.body.classList.remove('door-time');
+    normal.style.display = '';
+    refreshInv();
+    finalBusy = false;
   });
 
 })();
