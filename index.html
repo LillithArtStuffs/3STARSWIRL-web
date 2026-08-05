@@ -101,6 +101,18 @@
   #mute.waiting { color:#8a7a2a; animation: pulse 1.4s ease-in-out infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
 
+  #astatus {
+    position:absolute;
+    right:12px;
+    top:44px;
+    color:#8a2a2a;
+    font-family:'UTDR', monospace;
+    font-size:12px;
+    text-align:right;
+    max-width:70vw;
+    pointer-events:none;
+  }
+
   #credit {
     position:absolute;
     left:10px;
@@ -173,16 +185,14 @@
   contact@3starswirl.com
 </div>
 
-<audio id="music" loop preload="none">
-  <source src="egg.mp3" type="audio/mpeg">
-  <source src="egg.ogg" type="audio/ogg">
-</audio>
+<audio id="music" loop preload="none"></audio>
 
 <div id="room">
   <div id="treeWrap"><img id="tree" alt="" src="data:image/png;base64,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"></div>
   <div id="hint"></div>
   <div id="flick"></div>
   <button id="mute" title="sound">&#9834;</button>
+  <div id="astatus"></div>
   <div id="credit">font: "undertale deltarune extended (Fixed)" by Viika &mdash; used with permission</div>
   <div id="box">
     <span id="line"></span><span id="cursor"></span>
@@ -244,28 +254,50 @@
   // ---------------------------------------------------------------
   const music   = document.getElementById('music');
   const muteBtn = document.getElementById('mute');
+  const statusEl = document.getElementById('astatus');
   let muted = false;
   let fadeTimer = null;
+
+  function showStatus(msg){
+    statusEl.textContent = msg;
+    if (msg) console.log('[egg audio]', msg);
+  }
+
+  // Pick the format up front, synchronously, and point src straight at
+  // it. preload="none" means nothing is actually fetched until play().
+  //
+  // This has to stay synchronous: browsers only allow play() while a
+  // user gesture is still "live", and any await in between throws that
+  // away — which is exactly why entering via a click still refused to
+  // start the music before.
+  music.src = (music.canPlayType('audio/mpeg') !== '') ? 'egg.mp3' : 'egg.ogg';
+
+  music.addEventListener('error', () => {
+    const e = music.error;
+    const codes = {1:'aborted', 2:'network', 3:'decode failed', 4:'not found / unsupported'};
+    showStatus('audio: ' + ((e && codes[e.code]) || 'unknown') + ' (' + music.getAttribute('src') + ')');
+    muteBtn.textContent = '!';
+    muteBtn.style.color = '#8a2a2a';
+  });
+
+  music.addEventListener('playing', () => {
+    showStatus('');
+    muteBtn.classList.remove('waiting');
+    muteBtn.textContent = '\u266A';
+    muteBtn.style.color = '';
+  });
 
   function startMusic(){
     if (muted) return;
     music.volume = 0.5;
-
-    // preload="none" means nothing is fetched until we ask. iOS Safari
-    // in particular wants an explicit load() before play() or it will
-    // quietly do nothing.
-    try { music.load(); } catch(e){}
-
-    const attempt = music.play();
-    if (attempt && attempt.catch){
-      attempt.catch(() => {
-        // autoplay refused (we got here without a click). say so, and
-        // start on the next tap anywhere.
-        if (!audioBroken) muteBtn.title = 'tap anywhere for sound';
+    const p = music.play();
+    if (p && p.catch){
+      p.catch(() => {
+        // no gesture available yet (room appeared on page load) —
+        // arm the next tap anywhere
         muteBtn.classList.add('waiting');
         const go = () => {
           if (muted) return;
-          muteBtn.classList.remove('waiting');
           music.play().catch(() => {});
         };
         document.addEventListener('click', go, { once: true });
@@ -274,53 +306,34 @@
     }
   }
 
-  function fadeOutMusic(ms){
+  function stopMusic(){
     clearInterval(fadeTimer);
-    const steps = 20;
-    const step = music.volume / steps;
-    fadeTimer = setInterval(() => {
-      music.volume = Math.max(0, music.volume - step);
-      if (music.volume <= 0.001){
-        clearInterval(fadeTimer);
-        music.pause();
-        music.currentTime = 0;
-      }
-    }, ms / steps);
+    music.pause();
+    try { music.currentTime = 0; } catch(e){}
+    muteBtn.classList.remove('waiting');
   }
 
-  // if the file can't be found or decoded, say so instead of failing silently
-  let audioBroken = false;
-  function markBroken(why){
-    audioBroken = true;
-    muteBtn.textContent = '!';
-    muteBtn.title = 'audio failed: ' + why;
-    muteBtn.style.color = '#8a2a2a';
-    console.error('[egg] audio failed:', why);
+  function fadeOutMusic(ms){
+    clearInterval(fadeTimer);
+    if (music.paused){ stopMusic(); return; }
+    const steps = 20;
+    const step = (music.volume || 0.5) / steps;
+    fadeTimer = setInterval(() => {
+      music.volume = Math.max(0, music.volume - step);
+      if (music.volume <= 0.001){ stopMusic(); }
+    }, ms / steps);
   }
-  music.addEventListener('error', () => {
-    const e = music.error;
-    markBroken(e ? ('code ' + e.code) : 'unknown');
-  });
-  // no source could be loaded at all (wrong path / missing file)
-  Array.from(music.getElementsByTagName('source')).forEach(s => {
-    s.addEventListener('error', () => {
-      if (music.networkState === 3 || music.readyState === 0) {
-        markBroken('could not load ' + s.getAttribute('src'));
-      }
-    });
-  });
 
   muteBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     muted = !muted;
     muteBtn.classList.toggle('off', muted);
-    if (muted){
-      music.pause();
-    } else {
-      music.volume = 0.5;
-      music.play().catch(() => {});
-    }
+    if (muted){ stopMusic(); }
+    else { music.volume = 0.5; startMusic(); }
   });
+
+  // belt and braces: if the room is ever hidden, the music goes with it
+  window.addEventListener('pagehide', stopMusic);
 
   // ---------------------------------------------------------------
   // text blip — synthesized, no audio files
