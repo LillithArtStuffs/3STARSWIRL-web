@@ -257,6 +257,7 @@
   const statusEl = document.getElementById('astatus');
   let muted = false;
   let fadeTimer = null;
+  let inRoom = false;   // hard gate: music may only ever run inside the room
 
   function showStatus(msg){
     statusEl.textContent = msg;
@@ -288,16 +289,18 @@
   });
 
   function startMusic(){
-    if (muted) return;
+    if (muted || !inRoom) return;
     music.volume = 0.5;
     const p = music.play();
     if (p && p.catch){
       p.catch(() => {
         // no gesture available yet (room appeared on page load) —
-        // arm the next tap anywhere
+        // arm the next tap anywhere. this listener can outlive the
+        // room, so it has to re-check inRoom before doing anything,
+        // or it will happily start the music on the 404 page.
         muteBtn.classList.add('waiting');
         const go = () => {
-          if (muted) return;
+          if (muted || !inRoom) return;
           music.play().catch(() => {});
         };
         document.addEventListener('click', go, { once: true });
@@ -316,12 +319,16 @@
   function fadeOutMusic(ms){
     clearInterval(fadeTimer);
     if (music.paused){ stopMusic(); return; }
-    const steps = 20;
+    const steps = 16;
     const step = (music.volume || 0.5) / steps;
+    let n = 0;
     fadeTimer = setInterval(() => {
+      n++;
       music.volume = Math.max(0, music.volume - step);
-      if (music.volume <= 0.001){ stopMusic(); }
+      if (music.volume <= 0.001 || n >= steps){ stopMusic(); }
     }, ms / steps);
+    // hard backstop — whatever happens above, it is silent by then
+    setTimeout(stopMusic, ms + 120);
   }
 
   muteBtn.addEventListener('click', (e) => {
@@ -329,7 +336,7 @@
     muted = !muted;
     muteBtn.classList.toggle('off', muted);
     if (muted){ stopMusic(); }
-    else { music.volume = 0.5; startMusic(); }
+    else if (inRoom){ music.volume = 0.5; startMusic(); }
   });
 
   // belt and braces: if the room is ever hidden, the music goes with it
@@ -432,7 +439,8 @@
   let busy = false;
 
   function exitRoom(){
-    fadeOutMusic(700);
+    inRoom = false;          // set first, so nothing can restart it mid-fade
+    fadeOutMusic(400);
     room.classList.remove('on');
     box.classList.remove('on');
     hint.textContent = '';
@@ -501,6 +509,7 @@
   }
 
   function enterRoom(){
+    inRoom = true;
     normal.style.display = 'none';
     room.classList.add('on');
     treeWrap.addEventListener('click', talkToTree);
